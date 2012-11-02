@@ -171,10 +171,12 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
         @Override
         public void run() {
-            while (true) {
+
+            Number version = null;
+            String digest = null;
+
+        	while (true) {
                 try {
-                    Number version;
-                    String digest;
                     // read state from _custom
                     client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
                     GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
@@ -193,12 +195,23 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     }
                     Connection connection = service.getConnection(driver, url, user, password, true);
                     PreparedStatement statement = service.prepareStatement(connection, sql);
-                    service.bind(statement, params);
+                                        
+                     
+                     
+                    ResultSet now = service.execute(service.prepareStatement(connection, "SELECT NOW()"), 0);
+                    now.first();
+                    String startTime = now.getTimestamp(1).toString();
+                    
+                    
+
                     ResultSet results = service.execute(statement, fetchsize);
                     Merger merger = new Merger(operation, version.longValue());
+                    saveStatus(version.longValue(), merger.getDigest(), "running", 0, startTime.toString());
+
                     long rows = 0L;
                     while (service.nextRow(results, merger)) {
                         rows++;
+                        if (rows%1000 == 0) saveStatus(version.longValue(), merger.getDigest(), "running", rows, startTime);
                     }
                     merger.close();
                     service.close(results);
@@ -208,24 +221,19 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     // this flush is required before house keeping starts
                     operation.flush();
 
-                    // save state to _custom
-                    XContentBuilder builder = jsonBuilder();
-                    builder.startObject().startObject("jdbc");
-                    if (creationDate != null) {
-                        builder.field("created", creationDate);
-                    }
-                    builder.field("version", version.longValue());
-                    builder.field("digest", merger.getDigest());
-                    builder.endObject().endObject();
-                    client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id("_custom").source(builder)).execute().actionGet();
-                    
                     // house keeping if data has changed
                     if (digest != null && !merger.getDigest().equals(digest)) {
                         housekeeper(version.longValue());
                         // perform outstanding housekeeper bulk requests
                         operation.flush();
                     }
+                    // save state to _custom
+
+                    saveStatus(version.longValue(), merger.getDigest(), "done",
+                            rows, startTime);
+
                     delay("next run");
+
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e, (Object) null);
                     closed = true;
@@ -236,6 +244,24 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             }
         }
 
+        private void saveStatus(long version, String digest, String status, long rows, String startTime) throws IOException{
+            // save state to _custom
+            XContentBuilder builder = jsonBuilder();
+            builder.startObject().startObject("jdbc");
+            if (creationDate != null) {
+                builder.field("created", creationDate);
+            }
+            builder.field("version", version);
+            if (digest != null){
+            	builder.field("digest", digest);
+            }
+            builder.field("status", status);
+            builder.field("rows_processed", rows);
+            builder.field("start_time", startTime);
+            builder.endObject().endObject();
+            client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id("_custom").source(builder)).execute().actionGet();
+        	
+        }
         
         private void housekeeper(long version) throws IOException {
             logger.info("housekeeping for version " + version);
