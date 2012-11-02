@@ -89,7 +89,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
-            fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
+            fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), Integer.MIN_VALUE);
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
             rivertable = XContentMapValues.nodeBooleanValue(jdbcSettings.get("rivertable"), false);
             interval = XContentMapValues.nodeTimeValue(jdbcSettings.get("interval"), TimeValue.timeValueMinutes(60));
@@ -207,6 +207,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     logger.info("got " + rows + " rows for version " + version.longValue() + ", digest = " + merger.getDigest());
                     // this flush is required before house keeping starts
                     operation.flush();
+
                     // save state to _custom
                     XContentBuilder builder = jsonBuilder();
                     builder.startObject().startObject("jdbc");
@@ -217,6 +218,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     builder.field("digest", merger.getDigest());
                     builder.endObject().endObject();
                     client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id("_custom").source(builder)).execute().actionGet();
+                    
                     // house keeping if data has changed
                     if (digest != null && !merger.getDigest().equals(digest)) {
                         housekeeper(version.longValue());
@@ -234,6 +236,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             }
         }
 
+        
         private void housekeeper(long version) throws IOException {
             logger.info("housekeeping for version " + version);
             client.admin().indices().prepareRefresh(indexName).execute().actionGet();
