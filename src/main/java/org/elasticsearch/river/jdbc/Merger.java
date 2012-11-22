@@ -18,14 +18,16 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.common.Base64;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.elasticsearch.common.Base64;
-import org.elasticsearch.common.xcontent.XContentBuilder;
+
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
@@ -95,7 +97,7 @@ public class Merger implements RowListener {
         this.delimiter = delimiter;
         this.builder = jsonBuilder();
         this.listener = action;
-        this.map = new HashMap();
+        this.map = new HashMap<String, Object>();
         this.version = version;
         this.digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         this.closed = false;
@@ -228,7 +230,7 @@ public class Merger implements RowListener {
             }
             builder.close();
             builder = jsonBuilder();
-            map = new HashMap();
+            map = new HashMap<String, Object>();
         }
     }
 
@@ -284,7 +286,7 @@ public class Merger implements RowListener {
                     throw new IllegalArgumentException("illegal prefix: " + p);
                 }
             } else {
-                Map<String, Object> m = new HashMap();
+                Map<String, Object> m = new HashMap<String, Object>();
                 map.put(p, m);
                 merge(m, q, value);
             }

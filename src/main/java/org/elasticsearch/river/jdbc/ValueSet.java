@@ -18,9 +18,10 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.common.xcontent.XContentBuilder;
+
 import java.io.IOException;
 import java.security.MessageDigest;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 
 /**
  * A ValueSet represents one or many values.
@@ -47,9 +48,9 @@ public class ValueSet {
             Object[] values = t.getValues();
             int l = values.length;
             boolean found = false;
-            for (int i = 0; i < l; i++) {
-                found = v != null && v.equals(values[i]);
-                if (found) {
+            for ( Object value : values ) {
+                found = v != null && v.equals( value );
+                if ( found ) {
                     break;
                 }
             }
@@ -83,10 +84,10 @@ public class ValueSet {
         if (value.length > 1) {
             builder.startArray();
         }
-        for (int i = 0; i < value.length; i++) {
-            builder.value(value[i]);
-            if (value[i] != null) {
-                digest.update(value[i].toString().getBytes(encoding));
+        for ( Object aValue : value ) {
+            builder.value( aValue );
+            if ( aValue != null ) {
+                digest.update( aValue.toString().getBytes( encoding ) );
             }
         }
         if (value.length > 1) {

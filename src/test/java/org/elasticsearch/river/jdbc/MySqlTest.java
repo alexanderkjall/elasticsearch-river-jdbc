@@ -86,7 +86,6 @@ public class MySqlTest {
     @Test
     public void testStarQuery() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
             String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
@@ -101,7 +100,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -124,7 +123,6 @@ public class MySqlTest {
     @Test
     public void testBill() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
             String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
@@ -139,7 +137,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -162,7 +160,6 @@ public class MySqlTest {
     @Test
     public void testRelations() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
             String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
@@ -177,7 +174,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -200,7 +197,6 @@ public class MySqlTest {
     @Test
     public void testHighBills() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
             String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String user = "";
             String password = "";
@@ -216,7 +212,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, user, password, true);
+            Connection connection = service.getConnection(url, user, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -239,7 +235,6 @@ public class MySqlTest {
     @Test
     public void testTimePeriod() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
             String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
@@ -256,7 +251,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
