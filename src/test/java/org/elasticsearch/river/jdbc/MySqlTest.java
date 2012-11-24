@@ -27,18 +27,32 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.*;
 
-import static junit.framework.Assert.fail;
+import static org.testng.Assert.assertEquals;
 
 public class MySqlTest {
     private MysqldResource mysqldResource;
     private int mysqlPort;
 
+    private String url;
+    private String username;
+    private String password;
+
+    private SQLService service;
+    private Connection connection;
+    private PreparedStatement statement;
+
     @BeforeClass
     public void setup() throws IOException, ClassNotFoundException, SQLException {
         startMysql();
+
+        url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
+        username = "";
+        password = "";
+
         loadTables(new File (".").getCanonicalPath() + "/mysql-demo.sql");
     }
 
@@ -46,10 +60,6 @@ public class MySqlTest {
         String content = FileUtils.readFileToString(new File(file));
 
         String[] statements = content.split(";");
-
-        String url = "jdbc:mysql://localhost:" + mysqlPort + "/";
-        String username = "";
-        String password = "";
 
         Connection connection = DriverManager.getConnection( url, username, password );
 
@@ -73,7 +83,15 @@ public class MySqlTest {
         mysqldResource.start(threadName, options);
     }
 
+    private Action getDefaultAction() {
+        return new DefaultAction() {
 
+            @Override
+            public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+                System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
+            }
+        };
+    }
 
     @AfterClass
     public void tearDown() {
@@ -83,192 +101,121 @@ public class MySqlTest {
         mysqldResource = null;
     }
 
-    @Test
-    public void testStarQuery() {
-        try {
-            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
-            String username = "";
-            String password = "";
-            String sql = "select * from orders";
-            List<Object> params = new ArrayList<Object>();
-            int fetchsize = 0;
-            Action listener = new DefaultAction() {
-
-                @Override
-                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
-                    System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
-                }
-            };
-            SQLService service = new SQLService();
-            Connection connection = service.getConnection(url, username, password, true);
-            PreparedStatement statement = service.prepareStatement(connection, sql);
-            service.bind(statement, params);
-            ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener, 1L);
-            long rows = 0L;
-            while (service.nextRow(results, merger)) {
-                rows++;
-            }
-            merger.close();
-            System.err.println("rows = " + rows);
-            service.close(results);
-            service.close(statement);
-            service.close(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception happened");
-        }
+    private void setupSql(String sql, List<Object> params) throws SQLException {
+        service = new SQLService();
+        connection = service.getConnection(url, username, password, true);
+        statement = service.prepareStatement(connection, sql);
+        service.bind(statement, params);
     }
 
     @Test
-    public void testBill() {
-        try {
-            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
-            String username = "";
-            String password = "";
-            String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product ";
-            List<Object> params = new ArrayList<Object>();
-            int fetchsize = 0;
-            Action listener = new DefaultAction() {
+    public void testStarQuery() throws IOException, SQLException, NoSuchAlgorithmException {
+        String sql = "select * from orders";
+        List<Object> params = new ArrayList<Object>();
+        int fetchSize = 0;
+        Action listener = getDefaultAction();
 
-                @Override
-                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
-                    System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
-                }
-            };
-            SQLService service = new SQLService();
-            Connection connection = service.getConnection(url, username, password, true);
-            PreparedStatement statement = service.prepareStatement(connection, sql);
-            service.bind(statement, params);
-            ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener, 1L);
-            long rows = 0L;
-            while (service.nextRow(results, merger)) {
-                rows++;
-            }
-            merger.close();
-            System.err.println("rows = " + rows);
-            service.close(results);
-            service.close(statement);
-            service.close(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception happened");
+        setupSql(sql, params);
+
+        ResultSet results = service.execute(statement, fetchSize);
+        Merger merger = new Merger(listener, 1L);
+        long rows = 0L;
+        while (service.nextRow(results, merger)) {
+            rows++;
         }
-    }    
-    
+        assertEquals(rows, 5, "checking number of rows returned from the merger");
+
+        close(merger, service, results, statement, connection);
+    }
+
     @Test
-    public void testRelations() {
-        try {
-            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
-            String username = "";
-            String password = "";
-            String sql = "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department";
-            List<Object> params = new ArrayList<Object>();
-            int fetchsize = 0;
-            Action listener = new DefaultAction() {
+    public void testBill() throws SQLException, IOException, NoSuchAlgorithmException {
+        String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product ";
+        List<Object> params = new ArrayList<Object>();
+        int fetchSize = 0;
+        Action listener = getDefaultAction();
 
-                @Override
-                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
-                    System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
-                }
-            };
-            SQLService service = new SQLService();
-            Connection connection = service.getConnection(url, username, password, true);
-            PreparedStatement statement = service.prepareStatement(connection, sql);
-            service.bind(statement, params);
-            ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener, 1L);
-            long rows = 0L;
-            while (service.nextRow(results, merger)) {
-                rows++;
-            }
-            merger.close();
-            System.err.println("rows = " + rows);
-            service.close(results);
-            service.close(statement);
-            service.close(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception happened");
+        setupSql(sql, params);
+
+        ResultSet results = service.execute(statement, fetchSize);
+        Merger merger = new Merger(listener, 1L);
+        long rows = 0L;
+        while (service.nextRow(results, merger)) {
+            rows++;
         }
+        assertEquals(rows, 5, "checking number of rows returned from the merger");
+
+        close(merger, service, results, statement, connection);
     }
     
     @Test
-    public void testHighBills() {
-        try {
-            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
-            String user = "";
-            String password = "";
-            String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.quantity * products.price > ?";
-            List<Object> params = new ArrayList<Object>();
-            params.add(5.0);
-            int fetchsize = 0;
-            Action listener = new DefaultAction() {
+    public void testRelations() throws IOException, NoSuchAlgorithmException, SQLException {
+        String sql = "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department";
+        List<Object> params = new ArrayList<Object>();
+        int fetchSize = 0;
+        Action listener = getDefaultAction();
 
-                @Override
-                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
-                    System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
-                }
-            };
-            SQLService service = new SQLService();
-            Connection connection = service.getConnection(url, user, password, true);
-            PreparedStatement statement = service.prepareStatement(connection, sql);
-            service.bind(statement, params);
-            ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener, 1L);
-            long rows = 0L;
-            while (service.nextRow(results, merger)) {
-                rows++;
-            }
-            merger.close();
-            System.err.println("rows = " + rows);
-            service.close(results);
-            service.close(statement);
-            service.close(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception happened");
+        setupSql(sql, params);
+
+        ResultSet results = service.execute(statement, fetchSize);
+        Merger merger = new Merger(listener, 1L);
+        long rows = 0L;
+        while (service.nextRow(results, merger)) {
+            rows++;
         }
-    }    
+        assertEquals(rows, 11, "checking number of rows returned from the merger");
+
+        close(merger, service, results, statement, connection);
+    }
+    
+    @Test
+    public void testHighBills() throws SQLException, IOException, NoSuchAlgorithmException {
+        String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.quantity * products.price > ?";
+        List<Object> params = new ArrayList<Object>();
+        params.add(5.0);
+        int fetchSize = 0;
+        Action listener = getDefaultAction();
+
+        setupSql(sql, params);
+
+        ResultSet results = service.execute(statement, fetchSize);
+        Merger merger = new Merger(listener, 1L);
+        long rows = 0L;
+        while (service.nextRow(results, merger)) {
+            rows++;
+        }
+        assertEquals(rows, 0, "checking number of rows returned from the merger");
+
+        close(merger, service, results, statement, connection);
+    }
 
     @Test
-    public void testTimePeriod() {
-        try {
-            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
-            String username = "";
-            String password = "";
-            String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.created between ? - 14 and ?";
-            List<Object> params = new ArrayList<Object>();
-            params.add("2012-06-01");
-            params.add("$now");
-            int fetchsize = 0;
-            Action listener = new DefaultAction() {
+    public void testTimePeriod() throws SQLException, IOException, NoSuchAlgorithmException {
+        String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.created between ? - 14 and ?";
+        List<Object> params = new ArrayList<Object>();
+        params.add("2012-06-01");
+        params.add("$now");
+        int fetchSize = 0;
+        Action listener = getDefaultAction();
 
-                @Override
-                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
-                    System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
-                }
-            };
-            SQLService service = new SQLService();
-            Connection connection = service.getConnection(url, username, password, true);
-            PreparedStatement statement = service.prepareStatement(connection, sql);
-            service.bind(statement, params);
-            ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener, 1L);
-            long rows = 0L;
-            while (service.nextRow(results, merger)) {
-                rows++;
-            }
-            merger.close();
-            System.err.println("rows = " + rows);
-            service.close(results);
-            service.close(statement);
-            service.close(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception happened");
+        setupSql(sql, params);
+
+        ResultSet results = service.execute(statement, fetchSize);
+        Merger merger = new Merger(listener, 1L);
+        long rows = 0L;
+        while (service.nextRow(results, merger)) {
+            rows++;
         }
-    }    
-    
+        assertEquals(rows, 2, "checking number of rows returned from the merger");
+
+        close(merger, service, results, statement, connection);
+    }
+
+    private void close(Merger merger, SQLService service, ResultSet results, PreparedStatement statement, Connection connection) throws IOException, SQLException {
+        merger.close();
+        service.close(results);
+        service.close(statement);
+        service.close(connection);
+    }
+
 }
