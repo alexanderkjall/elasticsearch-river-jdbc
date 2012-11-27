@@ -18,9 +18,7 @@
  */
 package org.elasticsearch.river.jdbc;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
@@ -231,32 +229,7 @@ public class BulkOperation implements Action {
         final int numberOfActions = currentBulk.get().numberOfActions();
         logger.info("submitting new bulk request ({} docs, {} requests currently active)", numberOfActions, currentOnGoingBulks );
         try {
-            currentBulk.get().execute(new ActionListener<BulkResponse>() {
-
-                @Override
-                public void onResponse(BulkResponse bulkResponse) {
-                    if (ack != null) try {
-                        ack.acknowledge(riverName, bulkResponse.items());
-                    } catch (IOException ex) {
-                        logger.error("bulk acknowledge failed", ex);
-                    }
-                    if (bulkResponse.hasFailures()) {
-                        logger.error("bulk request has failures: {}", bulkResponse.buildFailureMessage());
-                    } else {
-                        final int totalActions = counter.addAndGet(numberOfActions);
-                        logger.info("bulk request success ({} millis, {} docs, total of {} docs)", bulkResponse.tookInMillis(), numberOfActions, totalActions );
-                    }
-                    onGoingBulks.decrementAndGet();
-                    synchronized (onGoingBulks) {
-                        onGoingBulks.notifyAll();
-                    }
-                }
-
-                @Override
-                public void onFailure(Throwable e) {
-                    logger.error("bulk request failed", e);
-                }
-            });
+            currentBulk.get().execute(new BulkActionListener(logger, ack, numberOfActions, onGoingBulks, counter, riverName));
         } catch (Exception e) {
             logger.error("unhandled exception, failed to execute bulk request", e);
         } finally {
@@ -267,5 +240,4 @@ public class BulkOperation implements Action {
     private boolean isNullOrEmpty(String s) {
         return s == null || s.length() == 0;
     }
-    
 }

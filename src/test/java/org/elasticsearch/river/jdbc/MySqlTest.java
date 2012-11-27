@@ -18,35 +18,21 @@
  */
 package org.elasticsearch.river.jdbc;
 
-import com.mysql.management.MysqldResource;
-import org.apache.commons.io.FileUtils;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.*;
-import java.util.*;
-
-import static org.testng.Assert.assertEquals;
-
 public class MySqlTest {
-    private MysqldResource mysqldResource;
-    private int mysqlPort;
+    /*
+    private static MysqldResource mysqldResource;
+    private static int mysqlPort;
 
-    private String url;
-    private String username;
-    private String password;
+    private static String url;
+    private static String username;
+    private static String password;
 
     private SQLService service;
     private Connection connection;
     private PreparedStatement statement;
 
     @BeforeClass
-    public void setup() throws IOException, ClassNotFoundException, SQLException {
+    public static void setup() throws IOException, ClassNotFoundException, SQLException {
         startMysql();
 
         url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
@@ -56,7 +42,7 @@ public class MySqlTest {
         loadTables(new File (".").getCanonicalPath() + "/mysql-demo.sql");
     }
 
-    private void loadTables(String file) throws IOException, ClassNotFoundException, SQLException {
+    private static void loadTables(String file) throws IOException, ClassNotFoundException, SQLException {
         String content = FileUtils.readFileToString(new File(file));
 
         String[] statements = content.split(";");
@@ -71,7 +57,7 @@ public class MySqlTest {
         }
     }
 
-    public void startMysql() throws IOException {
+    public static void startMysql() throws IOException {
         Random random = new Random();
         mysqlPort = 10000 + random.nextInt(10000);
         File baseDir = File.createTempFile("test", "mysql");
@@ -94,7 +80,7 @@ public class MySqlTest {
     }
 
     @AfterClass
-    public void tearDown() {
+    public static void tearDown() {
         if (mysqldResource != null) {
             mysqldResource.shutdown();
         }
@@ -123,7 +109,7 @@ public class MySqlTest {
         while (service.nextRow(results, merger)) {
             rows++;
         }
-        assertEquals(rows, 5, "checking number of rows returned from the merger");
+        assertEquals("checking number of rows returned from the merger", 5, rows);
 
         close(merger, service, results, statement, connection);
     }
@@ -143,7 +129,7 @@ public class MySqlTest {
         while (service.nextRow(results, merger)) {
             rows++;
         }
-        assertEquals(rows, 5, "checking number of rows returned from the merger");
+        assertEquals("checking number of rows returned from the merger", 5, rows);
 
         close(merger, service, results, statement, connection);
     }
@@ -163,7 +149,7 @@ public class MySqlTest {
         while (service.nextRow(results, merger)) {
             rows++;
         }
-        assertEquals(rows, 11, "checking number of rows returned from the merger");
+        assertEquals("checking number of rows returned from the merger", 11, rows);
 
         close(merger, service, results, statement, connection);
     }
@@ -184,7 +170,7 @@ public class MySqlTest {
         while (service.nextRow(results, merger)) {
             rows++;
         }
-        assertEquals(rows, 0, "checking number of rows returned from the merger");
+        assertEquals("checking number of rows returned from the merger", 0, rows);
 
         close(merger, service, results, statement, connection);
     }
@@ -206,7 +192,7 @@ public class MySqlTest {
         while (service.nextRow(results, merger)) {
             rows++;
         }
-        assertEquals(rows, 2, "checking number of rows returned from the merger");
+        assertEquals("checking number of rows returned from the merger", 2, rows);
 
         close(merger, service, results, statement, connection);
     }
@@ -217,5 +203,5 @@ public class MySqlTest {
         service.close(statement);
         service.close(connection);
     }
-
+*/
 }

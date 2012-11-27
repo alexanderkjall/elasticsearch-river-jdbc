@@ -19,7 +19,7 @@
 package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 
 public interface RowListener {
     
@@ -27,13 +27,12 @@ public interface RowListener {
      * Submit a row to the listener with a generic ID string.
      * 
      * @param operation the operation for the row
-     * @param index the index for the row
      * @param type the type for the row
      * @param id the id for the row
-     * @param keys the keys of the row (column labels)
-     * @param values the values of the row
-     * @throws IOException 
+     * @param row the keys and values of the row (column labels & content)
+     * @throws IOException
      */
-    void row(String operation, String index, String type, String id, List<String> keys, List<Object> values) throws IOException;
-    
+    void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException;
+
+    void flush();
 }

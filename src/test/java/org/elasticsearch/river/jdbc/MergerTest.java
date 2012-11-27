@@ -18,30 +18,69 @@
  */
 package org.elasticsearch.river.jdbc;
 
-import java.io.IOException;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.testng.annotations.Test;
-
 public class MergerTest {
-
+/*
     @Test
     public void test() throws Exception {
-        
+
         String columns[] = new String[] {"_id","person.salary","person.name", "person.position.name", "person.position.since"};
         String row1[] = new String[]{"1","$1000","Joe Doe", "Worker", "2012-06-12"};
         String row2[] = new String[]{"2","$2000","Bill Smith", "Boss", "2012-06-13"};
-        
+
         Action listener =  new DefaultAction() {
 
             @Override
             public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                System.err.println("index="+index + " type="+type + " id="+id+ " builder="+builder.string());
             }
-            
+
         };
         Merger merger = new Merger(listener, 1L);
         merger.row(columns, row1);
         merger.row(columns, row2);
         merger.close();
     }
+
+    @Test
+    public void testMergeAddsNullValues() throws IOException, NoSuchAlgorithmException {
+        Merger instance = new Merger(null);
+
+        Map<String, Object> target = new HashMap<String, Object>();
+        String key = "key";
+        Object value = null;
+
+        instance.merge(target, key, value);
+
+        assertEquals("number of entries in target", 1, target.size());
+    }
+
+    @Test
+    public void testMergeAddsCommonRoot() throws IOException, NoSuchAlgorithmException {
+        Merger instance = new Merger(null);
+
+        Map<String, Object> target = new HashMap<String, Object>();
+        target.put("key", null);
+        String key = "key";
+        Object value = null;
+
+        instance.merge(target, key, value);
+
+        assertEquals("number of entries in target", 1, target.size());
+    }
+
+    @Test
+    public void testMergeTwoTrees() throws IOException, NoSuchAlgorithmException {
+        Merger instance = new Merger(null);
+
+        Map<String, Object> target = new HashMap<String, Object>();
+        target.put("key_lvl1", null);
+        String key = "key";
+        Map<String, Object> value = new HashMap<String, Object>();
+        value.put("key_lvl2", null);
+
+        instance.merge(target, key, value);
+
+        assertEquals("number of entries in target", 2, target.size());
+    }
+*/
 }
