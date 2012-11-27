@@ -18,6 +18,21 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.cluster.block.ClusterBlockException;
+import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.util.concurrent.EsExecutors;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.support.XContentMapValues;
+import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.river.*;
+import org.elasticsearch.search.SearchHit;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,27 +40,10 @@ import java.sql.ResultSet;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import org.elasticsearch.ExceptionsHelper;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.client.Client;
+
 import static org.elasticsearch.client.Requests.indexRequest;
-import org.elasticsearch.cluster.block.ClusterBlockException;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.util.concurrent.EsExecutors;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.elasticsearch.river.AbstractRiverComponent;
-import org.elasticsearch.river.River;
-import org.elasticsearch.river.RiverIndexName;
-import org.elasticsearch.river.RiverName;
-import org.elasticsearch.river.RiverSettings;
-import org.elasticsearch.search.SearchHit;
 
 public class JDBCRiver extends AbstractRiverComponent implements River {
 
@@ -61,7 +59,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final TimeValue poll;
     private final TimeValue interval;
     private final String url;
-    private final String driver;
     private final String user;
     private final String password;
     private final String sql;
@@ -85,7 +82,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             Map<String, Object> jdbcSettings = (Map<String, Object>) settings.settings().get("jdbc");
             poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), TimeValue.timeValueMinutes(60));
             url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), null);
-            driver = XContentMapValues.nodeStringValue(jdbcSettings.get("driver"), null);
             user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
@@ -99,7 +95,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         } else {
             poll = TimeValue.timeValueMinutes(60);
             url = null;
-            driver = null;
             user = null;
             password = null;
             sql = null;
@@ -137,8 +132,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
     @Override
     public void start() {
-        logger.info("starting JDBC connector: URL [{}], driver [{}], sql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
-                url, driver, sql, rivertable, indexName, typeName, poll);
+        logger.info("starting JDBC connector: URL [{}], sql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
+                url, sql, rivertable, indexName, typeName, poll);
         try {
             client.admin().indices().prepareCreate(indexName).execute().actionGet();
             creationDate = new Date();
@@ -172,8 +167,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         @Override
         public void run() {
 
-            Number version = null;
-            String digest = null;
+            Number version;
+            String digest;
 
         	while (true) {
                 try {
@@ -193,7 +188,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                             throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName().name());
                         }
                     }
-                    Connection connection = service.getConnection(driver, url, user, password, true);
+                    Connection connection = service.getConnection(url, user, password, true);
                     PreparedStatement statement = service.prepareStatement(connection, sql);
                                         
                      
@@ -206,7 +201,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
                     ResultSet results = service.execute(statement, fetchsize);
                     Merger merger = new Merger(operation, version.longValue());
-                    saveStatus(version.longValue(), merger.getDigest(), "running", 0, startTime.toString());
+                    saveStatus(version.longValue(), merger.getDigest(), "running", 0, startTime );
 
                     long rows = 0L;
                     while (service.nextRow(results, merger)) {
@@ -325,7 +320,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             while (true) {
                 for (String optype : optypes) {
                     try {
-                        Connection connection = service.getConnection(driver, url, user, password, false);
+                        Connection connection = service.getConnection(url, user, password, false);
                         PreparedStatement statement = service.prepareRiverTableStatement(connection, riverName.getName(), optype, interval.millis());
                         ResultSet results = service.execute(statement, fetchsize);
                         Merger merger = new Merger(operation);
@@ -356,11 +351,11 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
     private void delay(String reason) {
         if (poll.millis() > 0L) {
-            logger.info("{}, waiting {}, URL [{}] driver [{}] sql [{}] river table [{}]",
-                    reason, poll, url, driver, sql, rivertable);
+            logger.info("{}, waiting {}, URL [{}] sql [{}] river table [{}]",
+                    reason, poll, url, sql, rivertable);
             try {
                 Thread.sleep(poll.millis());
-            } catch (InterruptedException e1) {
+            } catch (InterruptedException ignored) {
             }
         }
     }

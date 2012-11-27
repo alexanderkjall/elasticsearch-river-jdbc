@@ -18,28 +18,15 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.common.logging.ESLogger;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.common.logging.ESLogger;
 
 /**
  * The SQL service class manages the SQL access to the JDBC connection.
@@ -88,18 +75,14 @@ public class SQLService implements BulkAcknowledge {
     /**
      * Get JDBC connection
      *
-     * @param driverClassName
      * @param jdbcURL
      * @param user
      * @param password
      * @return the connection
-     * @throws ClassNotFoundException
      * @throws SQLException
      */
-    public Connection getConnection(final String driverClassName,
-            final String jdbcURL, final String user, final String password, boolean readOnly)
-            throws ClassNotFoundException, SQLException {
-        Class.forName(driverClassName);
+    public Connection getConnection(final String jdbcURL, final String user, final String password, boolean readOnly)
+            throws SQLException {
         this.connection = DriverManager.getConnection(jdbcURL, user, password);
         connection.setReadOnly(readOnly);
         connection.setAutoCommit(false);
@@ -248,8 +231,8 @@ public class SQLService implements BulkAcknowledge {
 
     private void processRow(ResultSet result, RowListener listener, String operation, String index, String type, String id)
             throws SQLException, IOException {
-        LinkedList<String> keys = new LinkedList();
-        LinkedList<Object> values = new LinkedList();
+        LinkedList<String> keys = new LinkedList<String>();
+        LinkedList<Object> values = new LinkedList<Object>();
         ResultSetMetaData metadata = result.getMetaData();
         int columns = metadata.getColumnCount();
         for (int i = 1; i <= columns; i++) {
@@ -813,9 +796,9 @@ public class SQLService implements BulkAcknowledge {
                 pstmt.setString(i, (String) value);
             }
         } else if (value instanceof Integer) {
-            pstmt.setInt(i, ((Integer) value).intValue());
+            pstmt.setInt(i, (Integer) value );
         } else if (value instanceof Long) {
-            pstmt.setLong(i, ((Long) value).longValue());
+            pstmt.setLong(i, (Long) value );
         } else if (value instanceof BigDecimal) {
             pstmt.setBigDecimal(i, (BigDecimal) value);
         } else if (value instanceof Date) {
@@ -823,9 +806,9 @@ public class SQLService implements BulkAcknowledge {
         } else if (value instanceof Timestamp) {
             pstmt.setTimestamp(i, (Timestamp) value);
         } else if (value instanceof Float) {
-            pstmt.setFloat(i, ((Float) value).floatValue());
+            pstmt.setFloat(i, (Float) value );
         } else if (value instanceof Double) {
-            pstmt.setDouble(i, ((Double) value).doubleValue());
+            pstmt.setDouble(i, (Double) value );
         } else {
             pstmt.setObject(i, value);
         }

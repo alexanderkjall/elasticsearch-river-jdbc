@@ -6,7 +6,7 @@ drop table if exists employees;
 create table employees (
    name varchar(32),
    department varchar(32),
-   salary decimal(5,2)
+   salary varchar(32)
 );
 
 drop table if exists departments;

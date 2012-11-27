@@ -18,26 +18,79 @@
  */
 package org.elasticsearch.river.jdbc;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+import com.mysql.management.MysqldResource;
+import org.apache.commons.io.FileUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.util.*;
+
+import static junit.framework.Assert.fail;
+
 public class MySqlTest {
+    private MysqldResource mysqldResource;
+    private int mysqlPort;
+
+    @BeforeClass
+    public void setup() throws IOException, ClassNotFoundException, SQLException {
+        startMysql();
+        loadTables(new File (".").getCanonicalPath() + "/mysql-demo.sql");
+    }
+
+    private void loadTables(String file) throws IOException, ClassNotFoundException, SQLException {
+        String content = FileUtils.readFileToString(new File(file));
+
+        String[] statements = content.split(";");
+
+        String url = "jdbc:mysql://localhost:" + mysqlPort + "/";
+        String username = "";
+        String password = "";
+
+        Connection connection = DriverManager.getConnection( url, username, password );
+
+        for(String statement : statements) {
+            if(statement.trim().length() != 0) {
+                PreparedStatement sqlStatement = connection.prepareStatement(statement);
+                sqlStatement.executeUpdate();
+            }
+        }
+    }
+
+    public void startMysql() throws IOException {
+        Random random = new Random();
+        mysqlPort = 10000 + random.nextInt(10000);
+        File baseDir = File.createTempFile("test", "mysql");
+        baseDir.delete();
+        mysqldResource = new MysqldResource(baseDir);
+        Map<String, String> options = new HashMap<String, String>();
+        options.put("port", Integer.toString(mysqlPort));
+        String threadName = "Test MySQL";
+        mysqldResource.start(threadName, options);
+    }
+
+
+
+    @AfterClass
+    public void tearDown() {
+        if (mysqldResource != null) {
+            mysqldResource.shutdown();
+        }
+        mysqldResource = null;
+    }
 
     @Test
     public void testStarQuery() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
-            String url = "jdbc:mysql://localhost:3306/test";
+            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
             String sql = "select * from orders";
-            List<Object> params = new ArrayList();
+            List<Object> params = new ArrayList<Object>();
             int fetchsize = 0;
             Action listener = new DefaultAction() {
 
@@ -47,7 +100,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -63,18 +116,18 @@ public class MySqlTest {
             service.close(connection);
         } catch (Exception e) {
             e.printStackTrace();
+            fail("Exception happened");
         }
     }
 
     @Test
     public void testBill() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
-            String url = "jdbc:mysql://localhost:3306/test";
+            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
             String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product ";
-            List<Object> params = new ArrayList();
+            List<Object> params = new ArrayList<Object>();
             int fetchsize = 0;
             Action listener = new DefaultAction() {
 
@@ -84,7 +137,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -100,18 +153,18 @@ public class MySqlTest {
             service.close(connection);
         } catch (Exception e) {
             e.printStackTrace();
+            fail("Exception happened");
         }
     }    
     
     @Test
     public void testRelations() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
-            String url = "jdbc:mysql://localhost:3306/test";
+            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
             String sql = "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department";
-            List<Object> params = new ArrayList();
+            List<Object> params = new ArrayList<Object>();
             int fetchsize = 0;
             Action listener = new DefaultAction() {
 
@@ -121,7 +174,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -137,18 +190,18 @@ public class MySqlTest {
             service.close(connection);
         } catch (Exception e) {
             e.printStackTrace();
+            fail("Exception happened");
         }
     }
     
     @Test
     public void testHighBills() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
-            String url = "jdbc:mysql://localhost:3306/test";
+            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String user = "";
             String password = "";
             String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.quantity * products.price > ?";
-            List<Object> params = new ArrayList();
+            List<Object> params = new ArrayList<Object>();
             params.add(5.0);
             int fetchsize = 0;
             Action listener = new DefaultAction() {
@@ -159,7 +212,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, user, password, true);
+            Connection connection = service.getConnection(url, user, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -175,18 +228,18 @@ public class MySqlTest {
             service.close(connection);
         } catch (Exception e) {
             e.printStackTrace();
+            fail("Exception happened");
         }
     }    
 
     @Test
     public void testTimePeriod() {
         try {
-            String driverClassName = "com.mysql.jdbc.Driver";
-            String url = "jdbc:mysql://localhost:3306/test";
+            String url = "jdbc:mysql://localhost:" + mysqlPort + "/test";
             String username = "";
             String password = "";
             String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.created between ? - 14 and ?";
-            List<Object> params = new ArrayList();
+            List<Object> params = new ArrayList<Object>();
             params.add("2012-06-01");
             params.add("$now");
             int fetchsize = 0;
@@ -198,7 +251,7 @@ public class MySqlTest {
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            Connection connection = service.getConnection(url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -214,6 +267,7 @@ public class MySqlTest {
             service.close(connection);
         } catch (Exception e) {
             e.printStackTrace();
+            fail("Exception happened");
         }
     }    
     

@@ -18,8 +18,6 @@
  */
 package org.elasticsearch.river.jdbc;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -29,6 +27,9 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.VersionType;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Send bulk data to Elasticsearch
@@ -49,7 +50,7 @@ public class BulkOperation implements Action {
     private static final int MAX_TOTAL_TIMEOUTS = 10;
     private static final AtomicInteger onGoingBulks = new AtomicInteger(0);
     private static final AtomicInteger counter = new AtomicInteger(0);
-    private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal();
+    private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal<BulkRequestBuilder>();
     private String riverName;
     private BulkAcknowledge ack;
     private boolean versioning;
@@ -228,7 +229,7 @@ public class BulkOperation implements Action {
         }
         int currentOnGoingBulks = onGoingBulks.incrementAndGet();
         final int numberOfActions = currentBulk.get().numberOfActions();
-        logger.info("submitting new bulk request ({} docs, {} requests currently active)", new Object[]{numberOfActions, currentOnGoingBulks});
+        logger.info("submitting new bulk request ({} docs, {} requests currently active)", numberOfActions, currentOnGoingBulks );
         try {
             currentBulk.get().execute(new ActionListener<BulkResponse>() {
 
@@ -243,7 +244,7 @@ public class BulkOperation implements Action {
                         logger.error("bulk request has failures: {}", bulkResponse.buildFailureMessage());
                     } else {
                         final int totalActions = counter.addAndGet(numberOfActions);
-                        logger.info("bulk request success ({} millis, {} docs, total of {} docs)", new Object[]{bulkResponse.tookInMillis(), numberOfActions, totalActions});
+                        logger.info("bulk request success ({} millis, {} docs, total of {} docs)", bulkResponse.tookInMillis(), numberOfActions, totalActions );
                     }
                     onGoingBulks.decrementAndGet();
                     synchronized (onGoingBulks) {
