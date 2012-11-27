@@ -2,7 +2,6 @@ package org.elasticsearch.river.jdbc.PipeParts;
 
 import org.elasticsearch.river.jdbc.IndexOperation;
 import org.elasticsearch.river.jdbc.RowListener;
-import org.elasticsearch.river.jdbc.ValueSet;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -56,7 +55,7 @@ public class RowTransformer implements RowListener {
     protected static void merge(Map<String, Object> map, String key, Object value, char delimiter) {
         int i = key.indexOf(delimiter);
         if (i <= 0) {
-            map.put(key, new ValueSet(map.get(key), value));
+            map.put(key, value);
         } else {
             String p = key.substring(0, i);
             String q = key.substring(i + 1);
