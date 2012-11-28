@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class JDBCConnector implements Runnable {
     private RiverDatabase rdb;
     private RiverName riverName;
-    private BulkOperation operation;
     private ESLogger logger;
     private String sql;
     private AtomicBoolean closed;
@@ -33,12 +32,11 @@ public class JDBCConnector implements Runnable {
     private int bulkSize;
 
     public JDBCConnector(RiverDatabase rdb, RiverName riverName,
-                         BulkOperation operation, ESLogger logger, String sql, AtomicBoolean closed,
+                         ESLogger logger, String sql, AtomicBoolean closed,
                          Client client, String riverIndexName, Date creationDate, TimeValue poll, String indexName,
                          String typeName, int bulkSize) {
         this.rdb = rdb;
         this.riverName = riverName;
-        this.operation = operation;
         this.logger = logger;
         this.sql = sql;
         this.closed = closed;

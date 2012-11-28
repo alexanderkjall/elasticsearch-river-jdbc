@@ -5,6 +5,7 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.river.jdbc.BulkActionListener;
 import org.elasticsearch.river.jdbc.IndexOperation;
 import org.elasticsearch.river.jdbc.RowListener;
@@ -21,11 +22,15 @@ import java.util.Map;
 public class ESEndPoint implements RowListener {
     private String indexTableName;
     private BulkRequestBuilder currentBulk;
+    private Client client;
     private int bulkSize;
+    private ESLogger logger;
 
-    public ESEndPoint(String indexTableName, Client client, int bulkSize) {
+    public ESEndPoint(String indexTableName, Client client, int bulkSize, ESLogger logger) {
         this.indexTableName = indexTableName;
+        this.client = client;
         this.bulkSize = bulkSize;
+        this.logger = logger;
         currentBulk = client.prepareBulk();
     }
 
@@ -42,11 +47,10 @@ public class ESEndPoint implements RowListener {
             currentBulk.add(request);
             break;
         }
-        case DELETE: {
+        case DELETE:
             DeleteRequest request = Requests.deleteRequest(indexTableName).type(type).id(id);
             currentBulk.add(request);
             break;
-        }
         }
 
         if (currentBulk.numberOfActions() >= bulkSize) {
@@ -57,30 +61,17 @@ public class ESEndPoint implements RowListener {
 
     @Override
     public void flush() {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     private void processBulk() {
-        while (onGoingBulks.intValue() >= maxActiveRequests) {
-            logger.info("waiting for {} active bulk requests", onGoingBulks);
-            synchronized (onGoingBulks) {
-                try {
-                    onGoingBulks.wait(millisBeforeContinue);
-                } catch (InterruptedException e) {
-                    logger.warn("timeout while waiting, continuing after {} ms", millisBeforeContinue);
-                    totalTimeouts++;
-                }
-            }
-        }
-        int currentOnGoingBulks = onGoingBulks.incrementAndGet();
-        final int numberOfActions = currentBulk.get().numberOfActions();
-        logger.info("submitting new bulk request ({} docs, {} requests currently active)", numberOfActions, currentOnGoingBulks );
+        int numberOfActions = currentBulk.numberOfActions();
+        logger.info("submitting new bulk request ({} docs)", numberOfActions );
         try {
-            currentBulk.get().execute(new BulkActionListener(logger, ack, numberOfActions, onGoingBulks, counter, riverName));
+            currentBulk.execute(new BulkActionListener(logger, numberOfActions));
         } catch (Exception e) {
             logger.error("unhandled exception, failed to execute bulk request", e);
         } finally {
-            currentBulk.set(client.prepareBulk());
+            currentBulk = client.prepareBulk();
         }
     }
 }

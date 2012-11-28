@@ -38,15 +38,12 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String riverIndexName;
     private final String indexName;
     private final String typeName;
-    private final BulkOperation operation;
     private final int bulkSize;
     private final TimeValue poll;
-    private final TimeValue interval;
     private final String url;
     private final String user;
     private final String password;
     private final String sql;
-    private final int fetchsize;
     private final boolean rivertable;
     private volatile Thread thread;
     private AtomicBoolean closed;
@@ -71,7 +68,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
-            fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), Integer.MIN_VALUE);
             rivertable = XContentMapValues.nodeBooleanValue(jdbcSettings.get("rivertable"), false);
             interval = XContentMapValues.nodeTimeValue(jdbcSettings.get("interval"), TimeValue.timeValueMinutes(60));
             versioning = XContentMapValues.nodeBooleanValue(jdbcSettings.get("versioning"), true);
@@ -113,10 +109,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         }
 
         rdb = new RiverDatabase(url, user, password, logger);
-
-        operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName).setVersioning(versioning)
-                .setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests)
-                .setMillisBeforeContinue(bulkTimeout.millis());
     }
 
     @Override
@@ -138,7 +130,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             }
         }
 
-        Runnable toRun = new JDBCConnector(rdb, riverName, operation, logger, sql, closed, client, riverIndexName, creationDate, poll, indexName, typeName, bulkSize);
+        Runnable toRun = new JDBCConnector(rdb, riverName, logger, sql, closed, client, riverIndexName, creationDate, poll, indexName, typeName, bulkSize);
 
         thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(toRun);
         thread.start();
