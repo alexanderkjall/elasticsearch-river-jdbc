@@ -69,7 +69,7 @@ public class JDBCConnector implements Runnable {
     }
 
     private int readNewAndUpdatedRows(RowListener pipe, VersionDigest versionDigest, String startTime) throws IOException {
-        ElasticSearchUtil.saveStatus(creationDate, client, riverIndexName, riverName, versionDigest.getVersion(), versionDigest.getDigest(), "running", 0, startTime );
+        ElasticSearchUtil.createStatusMap(creationDate, client, riverIndexName, riverName, versionDigest.getVersion(), versionDigest.getDigest(), "running", 0, startTime);
 
         int rows = rdb.pushRowsToListener(sql, pipe);
 
