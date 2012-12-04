@@ -5,7 +5,6 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.search.SearchHit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,25 +14,27 @@ import java.util.Set;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
-public class IntegrationTest extends AbstractNodesTest {
+public class IntegrationTestHelper {
 
-    private Client client;
+    private static Client client;
+
+    private static ElasticSearchTestHelper esServer = new ElasticSearchTestHelper();
 
     @Before
     public void createNodes() throws Exception {
-        startNode("node1");
-        startNode("node2");
+        esServer.startNode("node1");
+        esServer.startNode("node2");
         client = getClient();
     }
 
     @After
     public void closeNodes() {
         client.close();
-        closeAllNodes();
+        esServer.closeAllNodes();
     }
 
     protected Client getClient() {
-        return client("node1");
+        return esServer.client("node1");
     }
 
     @Test

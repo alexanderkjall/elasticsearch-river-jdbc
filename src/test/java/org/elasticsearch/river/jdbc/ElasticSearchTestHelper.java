@@ -21,7 +21,7 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
  * Date: 12/4/12
  * Time: 2:59 PM
  */
-public abstract class AbstractNodesTest {
+public class ElasticSearchTestHelper {
 
     protected final ESLogger logger = Loggers.getLogger(getClass());
 
