@@ -19,41 +19,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class JDBCConnector implements Runnable {
     private RiverDatabase rdb;
-    private RiverName riverName;
+    private RiverConfiguration rc;
     private ESLogger logger;
-    private String sql;
     private AtomicBoolean closed;
     private Client client;
-    private String riverIndexName;
     private Date creationDate;
-    private TimeValue poll;
-    private String indexName;
-    private String typeName;
-    private int bulkSize;
 
-    public JDBCConnector(RiverDatabase rdb, RiverName riverName,
-                         ESLogger logger, String sql, AtomicBoolean closed,
-                         Client client, String riverIndexName, Date creationDate, TimeValue poll, String indexName,
-                         String typeName, int bulkSize) {
+    public JDBCConnector(RiverDatabase rdb, RiverConfiguration rc, ESLogger logger, AtomicBoolean closed, Client client, Date creationDate) {
         this.rdb = rdb;
-        this.riverName = riverName;
+        this.rc = rc;
         this.logger = logger;
-        this.sql = sql;
         this.closed = closed;
         this.client = client;
-        this.riverIndexName = riverIndexName;
         this.creationDate = creationDate;
-        this.poll = poll;
-        this.indexName = indexName;
-        this.typeName = typeName;
-        this.bulkSize = bulkSize;
     }
 
     private VersionDigest loadVersionAndDigest() throws IOException {
         VersionDigest versionDigest = new VersionDigest(1L, null);
 
-        client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
-        GetResponse get = client.prepareGet(riverIndexName, riverName.name(), "_custom").execute().actionGet();
+        client.admin().indices().prepareRefresh(rc.getRiverIndexName()).execute().actionGet();
+        GetResponse get = client.prepareGet(rc.getRiverIndexName(), rc.getRiverName().name(), "_custom").execute().actionGet();
         if (creationDate != null || !get.exists()) {
         } else {
             Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
@@ -62,16 +47,14 @@ public class JDBCConnector implements Runnable {
                 versionDigest.setVersion(versionDigest.getVersion() + 1); // increase to next version
                 versionDigest.setDigest((String) jdbcState.get("digest"));
             } else {
-                throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName.name());
+                throw new IOException("can't retrieve previously persisted state from " + rc.getRiverIndexName() + "/" + rc.getRiverName().name());
             }
         }
         return versionDigest;
     }
 
     private int readNewAndUpdatedRows(RowListener pipe, VersionDigest versionDigest, String startTime) throws IOException {
-        ElasticSearchUtil.createStatusMap(creationDate, client, riverIndexName, riverName, versionDigest.getVersion(), versionDigest.getDigest(), "running", 0, startTime);
-
-        int rows = rdb.pushRowsToListener(sql, pipe);
+        int rows = rdb.pushRowsToListener(rc.getSql(), pipe);
 
         logger.info("got " + rows + " rows for version " + versionDigest.getVersion() + ", digest = " + versionDigest.getDigest());
 
@@ -79,7 +62,7 @@ public class JDBCConnector implements Runnable {
     }
 
     private int readDeletes(RowListener pipe) throws IOException {
-        int rows = rdb.pushDeletesToListener(sql, pipe);
+        int rows = rdb.pushDeletesToListener(rc.getSql(), pipe);
 
         logger.info("got " + rows + " for deletion");
 
@@ -94,7 +77,7 @@ public class JDBCConnector implements Runnable {
                 VersionDigest versionDigest = loadVersionAndDigest();
 
                 String startTime = rdb.getStartTime();
-                RowListener pipe = PipelineFactory.createIncrementalPipe();
+                RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getRiverIndexName(), client, rc.getBulkSize(), rc.getDelimiter(), logger);
 
                 int nrOfUpdates = readNewAndUpdatedRows(pipe, versionDigest, startTime);
                 pipe.flush();
@@ -114,11 +97,11 @@ public class JDBCConnector implements Runnable {
     }
 
     private void delay(String reason) {
-        if (poll.millis() > 0L) {
+        if (rc.getPoll().millis() > 0L) {
             logger.info("{}, waiting {}, sql [{}] river table [{}]",
-                    reason, poll, sql, false);
+                    reason, rc.getPoll(), rc.getSql(), false);
             try {
-                Thread.sleep(poll.millis());
+                Thread.sleep(rc.getPoll().millis());
             } catch (InterruptedException ignored) {
             }
         }

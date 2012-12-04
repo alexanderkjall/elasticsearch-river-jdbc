@@ -1,5 +1,11 @@
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.river.jdbc.PipeParts.ESEndPoint;
+import org.elasticsearch.river.jdbc.PipeParts.RowTransformer;
+import org.elasticsearch.river.jdbc.PipeParts.StatusUpdateRowListener;
+
 /**
  * Created with IntelliJ IDEA.
  * User: capitol
@@ -7,7 +13,13 @@ package org.elasticsearch.river.jdbc;
  * Time: 23:29
  */
 public class PipelineFactory {
-    public static RowListener createIncrementalPipe() {
-        return null;
+    public static RowListener createIncrementalPipe(String riverTableName, String indexTableName, Client client, int bulkSize, char delimiter, ESLogger logger) {
+        ESEndPoint riverTableEnd = new ESEndPoint(riverTableName, client, 1, logger);
+
+        ESEndPoint end = new ESEndPoint(indexTableName, client, bulkSize, logger);
+        RowTransformer middle = new RowTransformer(end, delimiter);
+        StatusUpdateRowListener start = new StatusUpdateRowListener(middle, riverTableEnd);
+
+        return start;
     }
 }
