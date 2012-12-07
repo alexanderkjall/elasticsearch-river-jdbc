@@ -3,6 +3,7 @@ package org.elasticsearch.river.jdbc;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 
 import java.io.IOException;
 import java.util.Date;
@@ -16,17 +17,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Time: 09:30
  */
 public class JDBCConnector implements Runnable {
+    protected final ESLogger logger = Loggers.getLogger(getClass());
+
     private RiverDatabase rdb;
     private RiverConfiguration rc;
-    private ESLogger logger;
     private AtomicBoolean closed;
     private Client client;
     private Date creationDate;
 
-    public JDBCConnector(RiverDatabase rdb, RiverConfiguration rc, ESLogger logger, AtomicBoolean closed, Client client, Date creationDate) {
+    public JDBCConnector(RiverDatabase rdb, RiverConfiguration rc, AtomicBoolean closed, Client client, Date creationDate) {
         this.rdb = rdb;
         this.rc = rc;
-        this.logger = logger;
         this.closed = closed;
         this.client = client;
         this.creationDate = creationDate;
@@ -75,7 +76,7 @@ public class JDBCConnector implements Runnable {
                 VersionDigest versionDigest = loadVersionAndDigest();
 
                 String startTime = rdb.getTime();
-                RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getRiverIndexName(), client, rc.getBulkSize(), rc.getDelimiter(), logger);
+                RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getRiverIndexName(), client, rc.getBulkSize(), rc.getDelimiter());
 
                 int nrOfUpdates = readNewAndUpdatedRows(pipe, versionDigest, startTime);
                 pipe.flush();

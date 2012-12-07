@@ -221,6 +221,9 @@ public class SQLUtil {
                     Timestamp t = result.getTimestamp(i);
                     return t != null ? DateUtil.formatDateISO(t.getTime()) : null;
                 } catch (SQLException e) {
+                    if(e.getMessage().equals("Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp"))
+                        return null;
+
                     logger.warn("Exception while parsing timestamp: {}", e);
                 }
                 return null;

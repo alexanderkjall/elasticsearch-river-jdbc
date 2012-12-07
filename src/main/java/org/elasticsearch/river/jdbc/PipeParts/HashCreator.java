@@ -1,6 +1,7 @@
 package org.elasticsearch.river.jdbc.PipeParts;
 
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.river.jdbc.IndexOperation;
 import org.elasticsearch.river.jdbc.RowListener;
 
@@ -16,13 +17,15 @@ import java.util.Map;
  * Time: 20:59
  */
 public class HashCreator implements RowListener {
+    protected final ESLogger logger = Loggers.getLogger(getClass());
+
     private final static String DIGEST_ALGORITHM = "SHA-256";
     private final static String DIGEST_ENCODING = "UTF-8";
 
     private MessageDigest digest;
     private RowListener next;
 
-    public HashCreator(RowListener next, ESLogger logger) {
+    public HashCreator(RowListener next) {
         this.next = next;
         try {
             digest = MessageDigest.getInstance(DIGEST_ALGORITHM);

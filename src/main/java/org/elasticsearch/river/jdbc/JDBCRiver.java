@@ -74,7 +74,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             }
         }
 
-        Runnable toRun = new JDBCConnector(rdb, rc, logger, closed, client, creationDate);
+        Runnable toRun = new JDBCConnector(rdb, rc, closed, client, creationDate);
 
         thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(toRun);
         thread.start();

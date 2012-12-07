@@ -6,6 +6,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.river.jdbc.BulkActionListener;
 import org.elasticsearch.river.jdbc.IndexOperation;
 import org.elasticsearch.river.jdbc.RowListener;
@@ -20,17 +21,17 @@ import java.util.Map;
  * Time: 21:58
  */
 public class ESEndPoint implements RowListener {
+    protected final ESLogger logger = Loggers.getLogger(getClass());
+
     private String indexTableName;
     private BulkRequestBuilder currentBulk;
     private Client client;
     private int bulkSize;
-    private ESLogger logger;
 
-    public ESEndPoint(String indexTableName, Client client, int bulkSize, ESLogger logger) {
+    public ESEndPoint(String indexTableName, Client client, int bulkSize) {
         this.indexTableName = indexTableName;
         this.client = client;
         this.bulkSize = bulkSize;
-        this.logger = logger;
         currentBulk = client.prepareBulk();
     }
 
@@ -67,7 +68,7 @@ public class ESEndPoint implements RowListener {
         int numberOfActions = currentBulk.numberOfActions();
         logger.info("submitting new bulk request ({} docs)", numberOfActions );
         try {
-            currentBulk.execute(new BulkActionListener(logger, numberOfActions));
+            currentBulk.execute(new BulkActionListener(numberOfActions));
         } catch (Exception e) {
             logger.error("unhandled exception, failed to execute bulk request", e);
         } finally {

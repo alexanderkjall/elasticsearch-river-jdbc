@@ -3,6 +3,7 @@ package org.elasticsearch.river.jdbc;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,11 +12,11 @@ import org.elasticsearch.common.logging.ESLogger;
  * Time: 07:49
  */
 public class BulkActionListener implements ActionListener<BulkResponse> {
-    private ESLogger logger;
+    protected final ESLogger logger = Loggers.getLogger(getClass());
+
     private int numberOfDocsInRequest;
 
-    public BulkActionListener(ESLogger logger, int numberOfDocsInRequest) {
-        this.logger = logger;
+    public BulkActionListener(int numberOfDocsInRequest) {
         this.numberOfDocsInRequest = numberOfDocsInRequest;
     }
 

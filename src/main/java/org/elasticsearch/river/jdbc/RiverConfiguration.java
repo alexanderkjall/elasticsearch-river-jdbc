@@ -5,6 +5,7 @@ import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -24,7 +25,7 @@ public class RiverConfiguration {
     private String password;
     private String sql;
     private int scale;
-    private String rounding;
+    private int rounding;
     private int maxBulkRequests;
     private TimeValue bulkTimeout;
     private RiverName riverName;
@@ -45,7 +46,7 @@ public class RiverConfiguration {
         user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
         password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
         sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
-        rounding = XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), null);
+        rounding = parseRounding(XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), null));
         scale = XContentMapValues.nodeIntegerValue(jdbcSettings.get("scale"), 0);
         bulkSize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("bulk_size"), 0);
         typeName = XContentMapValues.nodeStringValue(jdbcSettings.get("type_name"), null);
@@ -73,6 +74,27 @@ public class RiverConfiguration {
          bulkTimeout = TimeValue.timeValueMillis(60000);
 
          */
+    }
+
+    protected int parseRounding(String inputRounding) {
+        if ("ceiling".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_CEILING;
+        else if ("down".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_DOWN;
+        else if ("floor".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_FLOOR;
+        else if ("halfdown".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_HALF_DOWN;
+        else if ("halfeven".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_HALF_EVEN;
+        else if ("halfup".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_HALF_UP;
+        else if ("unnecessary".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_UNNECESSARY;
+        else if ("up".equalsIgnoreCase(inputRounding))
+            return BigDecimal.ROUND_UP;
+
+        return BigDecimal.ROUND_CEILING;
     }
 
     public String getUrl() {

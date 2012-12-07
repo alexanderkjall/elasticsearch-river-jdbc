@@ -24,7 +24,7 @@ public class MysqldTestHelper {
     private MysqldResource mysqldResource;
     private int mysqlPort;
 
-    public void loadTables(String file, String url, String username, String password) throws IOException, ClassNotFoundException, SQLException {
+    public void loadTables(String file, String url, String username, String password) throws IOException, SQLException {
         String content = FileUtils.readFileToString(new File(file));
 
         String[] statements = content.split(";");
@@ -54,6 +54,10 @@ public class MysqldTestHelper {
 
     public int getMysqlPort() {
         return mysqlPort;
+    }
+
+    public String getUrl() {
+        return "jdbc:mysql://localhost:" + mysqlPort + "/";
     }
 
     public void tearDown() {

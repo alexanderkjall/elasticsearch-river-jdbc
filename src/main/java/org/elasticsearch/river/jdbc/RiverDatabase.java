@@ -23,32 +23,10 @@ public class RiverDatabase extends Database {
     private int scale;
     private int rounding;
 
-    public RiverDatabase(String url, String user, String password) {
+    public RiverDatabase(String url, String user, String password, int scale, int rounding) {
         super(url, user, password);
-    }
-
-    public void setRounding(String rounding) {
-        if ("ceiling".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_CEILING;
-        } else if ("down".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_DOWN;
-        } else if ("floor".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_FLOOR;
-        } else if ("halfdown".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_HALF_DOWN;
-        } else if ("halfeven".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_HALF_EVEN;
-        } else if ("halfup".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_HALF_UP;
-        } else if ("unnecessary".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_UNNECESSARY;
-        } else if ("up".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_UP;
-        }
-    }
-
-    public void setPrecision(int scale) {
         this.scale = scale;
+        this.rounding = rounding;
     }
 
     public String getTime() {
