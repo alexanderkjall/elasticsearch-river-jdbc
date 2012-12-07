@@ -3,8 +3,6 @@ package org.elasticsearch.river.jdbc;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.river.RiverName;
 
 import java.io.IOException;
 import java.util.Date;
@@ -76,7 +74,7 @@ public class JDBCConnector implements Runnable {
             try {
                 VersionDigest versionDigest = loadVersionAndDigest();
 
-                String startTime = rdb.getStartTime();
+                String startTime = rdb.getTime();
                 RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getRiverIndexName(), client, rc.getBulkSize(), rc.getDelimiter(), logger);
 
                 int nrOfUpdates = readNewAndUpdatedRows(pipe, versionDigest, startTime);

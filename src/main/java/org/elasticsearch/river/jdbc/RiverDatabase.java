@@ -1,6 +1,7 @@
 package org.elasticsearch.river.jdbc;
 
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -16,13 +17,14 @@ import java.util.Map;
  * Time: 21:48
  */
 public class RiverDatabase extends Database {
-    private ESLogger logger;
+
+    protected final ESLogger logger = Loggers.getLogger(getClass());
+
     private int scale;
     private int rounding;
 
-    public RiverDatabase(String url, String user, String password, ESLogger logger) {
+    public RiverDatabase(String url, String user, String password) {
         super(url, user, password);
-        this.logger = logger;
     }
 
     public void setRounding(String rounding) {
@@ -49,7 +51,7 @@ public class RiverDatabase extends Database {
         this.scale = scale;
     }
 
-    public String getStartTime() {
+    public String getTime() {
         Connection conn = getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;

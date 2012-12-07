@@ -52,7 +52,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         if (settings.settings().containsKey("index"))
             rc.getIndexValues(settings);
 
-        rdb = new RiverDatabase(rc.getUrl(), rc.getUser(), rc.getPassword(), logger);
+        rdb = new RiverDatabase(rc.getUrl(), rc.getUser(), rc.getPassword());
     }
 
     @Override

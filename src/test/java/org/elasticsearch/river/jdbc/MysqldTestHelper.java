@@ -21,17 +21,10 @@ import java.util.Random;
  */
 public class MysqldTestHelper {
 
-    private static MysqldResource mysqldResource;
-    private static int mysqlPort;
+    private MysqldResource mysqldResource;
+    private int mysqlPort;
 
-    private static String url;
-    private static String username;
-    private static String password;
-
-    private Connection connection;
-    private PreparedStatement statement;
-
-    private static void loadTables(String file) throws IOException, ClassNotFoundException, SQLException {
+    public void loadTables(String file, String url, String username, String password) throws IOException, ClassNotFoundException, SQLException {
         String content = FileUtils.readFileToString(new File(file));
 
         String[] statements = content.split(";");
@@ -39,14 +32,15 @@ public class MysqldTestHelper {
         Connection connection = DriverManager.getConnection(url, username, password);
 
         for(String statement : statements) {
-            if(statement.trim().length() != 0) {
+            if(!statement.trim().isEmpty()) {
                 PreparedStatement sqlStatement = connection.prepareStatement(statement);
                 sqlStatement.executeUpdate();
+                sqlStatement.close();
             }
         }
     }
 
-    public static MysqldResource startMysql() throws IOException {
+    public void startMysql() throws IOException {
         Random random = new Random();
         mysqlPort = 10000 + random.nextInt(10000);
         File baseDir = File.createTempFile("test", "mysql");
@@ -56,8 +50,16 @@ public class MysqldTestHelper {
         options.put("port", Integer.toString(mysqlPort));
         String threadName = "Test MySQL";
         mysqldResource.start(threadName, options);
-
-        return mysqldResource;
     }
 
+    public int getMysqlPort() {
+        return mysqlPort;
+    }
+
+    public void tearDown() {
+        if (mysqldResource != null) {
+            mysqldResource.shutdown();
+        }
+        mysqldResource = null;
+    }
 }

@@ -18,7 +18,31 @@
  */
 package org.elasticsearch.river.jdbc;
 
-public class MySqlTest {
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.io.IOException;
+
+public class RiverDatabaseTest {
+
+    private static MysqldTestHelper db;
+
+    @BeforeClass
+    public static void setup() throws IOException {
+        db = new MysqldTestHelper();
+        db.startMysql();
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        db.tearDown();
+    }
+
+    @Test
+    public void testGetTime() {
+        RiverDatabase instance = new RiverDatabase("jdbc:mysql://localhost:" + db.getMysqlPort() + "/", "root", "");
+    }
     /*
     private static MysqldResource mysqldResource;
     private static int mysqlPort;
