@@ -1,10 +1,11 @@
-package org.elasticsearch.river.jdbc;
+package org.elasticsearch.river.jdbc.db;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
+import org.elasticsearch.river.jdbc.IndexOperation;
+import org.elasticsearch.river.jdbc.RowListener;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Date;
 import java.util.HashMap;
@@ -116,7 +117,7 @@ public class RiverDatabase extends Database {
                 Map<String, Object> row = new HashMap<String, Object>();
                 row.put("_id", rs.getString("_id"));
 
-                pipe.row(IndexOperation.INDEX, "", "", row);
+                pipe.row(IndexOperation.DELETE, "", "", row);
             }
         }
         catch (SQLException ex) {

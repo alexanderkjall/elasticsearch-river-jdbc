@@ -16,8 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.elasticsearch.river.jdbc;
+package org.elasticsearch.river.jdbc.db;
 
+import junit.framework.Assert;
+import org.elasticsearch.river.jdbc.IndexOperation;
+import org.elasticsearch.river.jdbc.MysqldTestHelper;
+import org.elasticsearch.river.jdbc.RowListenerCollector;
+import org.elasticsearch.river.jdbc.db.RiverDatabase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,6 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 
 public class RiverDatabaseTest {
 
@@ -70,5 +76,22 @@ public class RiverDatabaseTest {
         int expResult = 5;
 
         assertEquals("check number of updates", expResult, collector.getResults().size());
+        Assert.assertEquals("check that we send INDEX operations", IndexOperation.INDEX, collector.getLastOp());
+    }
+
+    @Test
+    public void testPushDeletesToListener() {
+        RiverDatabase instance = new RiverDatabase(db.getUrl() + "test", "root", "", 1, BigDecimal.ROUND_UP);
+
+        RowListenerCollector collector = new RowListenerCollector();
+
+        instance.pushDeletesToListener("select * from orders", collector);
+
+        int expResult = 5;
+
+        assertEquals("check number of updates", expResult, collector.getResults().size());
+        assertNotNull("check that we send _id", collector.getResults().get(0).get("_id"));
+        assertEquals("check that we only send _id", 1, collector.getResults().get(0).size());
+        assertEquals("check that we send DELETE operations", IndexOperation.DELETE, collector.getLastOp());
     }
 }

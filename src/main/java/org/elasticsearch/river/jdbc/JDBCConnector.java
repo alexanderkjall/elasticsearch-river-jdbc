@@ -1,13 +1,12 @@
 package org.elasticsearch.river.jdbc;
 
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
+import org.elasticsearch.river.jdbc.db.RiverDatabase;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -33,37 +32,24 @@ public class JDBCConnector implements Runnable {
         this.creationDate = creationDate;
     }
 
-    private VersionDigest loadVersionAndDigest() throws IOException {
-        VersionDigest versionDigest = new VersionDigest(1L, null);
-
+    private void loadVersionAndDigest() throws IOException {
         client.admin().indices().prepareRefresh(rc.getRiverIndexName()).execute().actionGet();
-        GetResponse get = client.prepareGet(rc.getRiverIndexName(), rc.getRiverName().name(), "_custom").execute().actionGet();
-        if (creationDate != null || !get.exists()) {
-        } else {
-            Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
-            if (jdbcState != null) {
-                versionDigest.setVersion((Number) jdbcState.get("version"));
-                versionDigest.setVersion(versionDigest.getVersion() + 1); // increase to next version
-                versionDigest.setDigest((String) jdbcState.get("digest"));
-            } else {
-                throw new IOException("can't retrieve previously persisted state from " + rc.getRiverIndexName() + "/" + rc.getRiverName().name());
-            }
-        }
-        return versionDigest;
+
+        rc.loadSavedState(client);
     }
 
-    private int readNewAndUpdatedRows(RowListener pipe, VersionDigest versionDigest, String startTime) throws IOException {
+    private int readNewAndUpdatedRows(RowListener pipe, String startTime) throws IOException {
         int rows = rdb.pushRowsToListener(rc.getSql(), pipe);
 
-        logger.info("got " + rows + " rows for version " + versionDigest.getVersion() + ", digest = " + versionDigest.getDigest());
+        logger.info("got " + rows + " rows for update at " + startTime);
 
         return rows;
     }
 
-    private int readDeletes(RowListener pipe) throws IOException {
+    private int readDeletes(RowListener pipe, String startTime) throws IOException {
         int rows = rdb.pushDeletesToListener(rc.getSql(), pipe);
 
-        logger.info("got " + rows + " for deletion");
+        logger.info("got " + rows + " for deletion at " + startTime);
 
         return rows;
     }
@@ -73,14 +59,14 @@ public class JDBCConnector implements Runnable {
 
         while (true) {
             try {
-                VersionDigest versionDigest = loadVersionAndDigest();
+                loadVersionAndDigest();
 
                 String startTime = rdb.getTime();
                 RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getRiverIndexName(), client, rc.getBulkSize(), rc.getDelimiter());
 
-                int nrOfUpdates = readNewAndUpdatedRows(pipe, versionDigest, startTime);
+                int nrOfUpdates = readNewAndUpdatedRows(pipe, startTime);
                 pipe.flush();
-                int nrOfDeletes = readDeletes(pipe);
+                int nrOfDeletes = readDeletes(pipe, startTime);
                 pipe.flush();
 
                 delay("next run");

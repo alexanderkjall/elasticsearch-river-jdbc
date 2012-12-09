@@ -1,4 +1,4 @@
-package org.elasticsearch.river.jdbc;
+package org.elasticsearch.river.jdbc.db;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 

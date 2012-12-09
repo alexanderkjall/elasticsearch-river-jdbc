@@ -34,11 +34,13 @@ create table products (
 drop table if exists orders;
 
 create table orders (
+   _id int NOT NULL AUTO_INCREMENT,
    customer varchar(32), 
    department varchar(32),
    product varchar(32),
    quantity int(11),
-   created datetime NOT NULL DEFAULT '0000-00-00 00:00:00'   
+   created datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+   PRIMARY KEY(_id)
 );
 
 insert into employees (name, department, salary) values('Smith', 'American Fruits', '10,000 $');

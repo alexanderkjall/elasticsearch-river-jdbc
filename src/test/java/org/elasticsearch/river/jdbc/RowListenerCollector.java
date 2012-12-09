@@ -12,6 +12,7 @@ import java.util.Map;
  * Time: 6:02 PM
  */
 public class RowListenerCollector implements RowListener {
+    private IndexOperation lastOp;
     private List<Map<String, Object>> results;
 
     public RowListenerCollector() {
@@ -19,6 +20,7 @@ public class RowListenerCollector implements RowListener {
     }
     @Override
     public void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException {
+        lastOp = operation;
         results.add(row);
     }
 
@@ -28,5 +30,9 @@ public class RowListenerCollector implements RowListener {
 
     public List<Map<String, Object>> getResults() {
         return results;
+    }
+
+    public IndexOperation getLastOp() {
+        return lastOp;
     }
 }

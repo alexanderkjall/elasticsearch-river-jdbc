@@ -1,10 +1,13 @@
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
 
@@ -30,6 +33,8 @@ public class RiverConfiguration {
     private TimeValue bulkTimeout;
     private RiverName riverName;
     private char delimiter;
+    private int version;
+    private String versionDigest;
 
     public RiverConfiguration() {
 
@@ -135,5 +140,20 @@ public class RiverConfiguration {
 
     public char getDelimiter() {
         return delimiter;
+    }
+
+    public void loadSavedState(Client client) throws IOException {
+        GetResponse get = client.prepareGet(riverIndexName, riverName.name(), "_custom").execute().actionGet();
+        if (get.exists()) {
+            Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
+            if (jdbcState != null) {
+                version = (Integer) jdbcState.get("version");
+                version = version + 1; // increase to next version
+                versionDigest = (String) jdbcState.get("digest");
+            } else {
+                throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName.name());
+            }
+        }
+
     }
 }

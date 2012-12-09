@@ -25,7 +25,9 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.river.*;
+import org.elasticsearch.river.jdbc.db.RiverDatabase;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -39,8 +41,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private RiverConfiguration rc;
 
     @Inject
-    public JDBCRiver(RiverName riverName, RiverSettings settings,
-                     @RiverIndexName String riverIndexName, Client client) {
+    public JDBCRiver(RiverName riverName, RiverSettings settings, @RiverIndexName String riverIndexName, Client client) {
         super(riverName, settings);
         this.client = client;
         closed = new AtomicBoolean(false);
@@ -52,7 +53,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         if (settings.settings().containsKey("index"))
             rc.getIndexValues(settings);
 
-        rdb = new RiverDatabase(rc.getUrl(), rc.getUser(), rc.getPassword());
+        rdb = new RiverDatabase(rc.getUrl(), rc.getUser(), rc.getPassword(), 1, BigDecimal.ROUND_CEILING);
     }
 
     @Override
