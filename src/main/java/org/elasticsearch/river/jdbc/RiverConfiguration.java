@@ -10,6 +10,8 @@ import org.elasticsearch.river.RiverSettings;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created with IntelliJ IDEA.
@@ -37,26 +39,58 @@ public class RiverConfiguration {
     private String versionDigest;
 
     public RiverConfiguration() {
-
+        poll = TimeValue.timeValueMinutes(60);
+        url = null;
+        user = null;
+        password = null;
+        sql = null;
+        rounding = BigDecimal.ROUND_UP;
+        scale = 0;
+        bulkSize = 0;
+        typeName = null;
+        indexName = null;
+        riverIndexName = null;
     }
 
     public RiverConfiguration(RiverSettings rs) {
+        this();
         getJDBCValues(rs);
     }
 
     public void getJDBCValues(RiverSettings rs) {
         Map<String, Object> jdbcSettings = (Map<String, Object>) rs.settings().get("jdbc");
-        poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), TimeValue.timeValueMinutes(60));
-        url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), null);
-        user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
-        password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
-        sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
-        rounding = parseRounding(XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), null));
-        scale = XContentMapValues.nodeIntegerValue(jdbcSettings.get("scale"), 0);
-        bulkSize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("bulk_size"), 0);
-        typeName = XContentMapValues.nodeStringValue(jdbcSettings.get("type_name"), null);
-        indexName = XContentMapValues.nodeStringValue(jdbcSettings.get("index_name"), null);
-        riverIndexName = XContentMapValues.nodeStringValue(jdbcSettings.get("river_index_name"), null);
+
+        if(jdbcSettings == null)
+            return;
+
+        poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), poll);
+        url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), url);
+        user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), user);
+        password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), password);
+        sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), sql);
+        rounding = parseRounding(XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), Integer.toString(rounding)));
+        scale = XContentMapValues.nodeIntegerValue(jdbcSettings.get("scale"), scale);
+        bulkSize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("bulk_size"), bulkSize);
+        typeName = XContentMapValues.nodeStringValue(jdbcSettings.get("type_name"), typeName);
+        indexName = XContentMapValues.nodeStringValue(jdbcSettings.get("index_name"), indexName);
+        riverIndexName = XContentMapValues.nodeStringValue(jdbcSettings.get("river_index_name"), riverIndexName);
+
+        if(indexName == null)
+            indexName = guessIndexNameFromSql(sql);
+        if(indexName == null)
+            indexName = "jdbc";
+    }
+
+    private String guessIndexNameFromSql(String sql) {
+
+        Pattern pattern = Pattern.compile(".*from\\s+(\\w*).*");
+
+        Matcher matcher = pattern.matcher(sql);
+
+        if(matcher.find())
+            return matcher.group();
+
+        return null;
     }
 
     public void getIndexValues(RiverSettings rs) {

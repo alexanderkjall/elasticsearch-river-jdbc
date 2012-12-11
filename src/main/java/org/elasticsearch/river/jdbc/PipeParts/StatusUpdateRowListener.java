@@ -34,6 +34,8 @@ public class StatusUpdateRowListener implements RowListener {
             Date currentTick = new Date();
 
             long time = currentTick.getTime() - lastTick.getTime();
+            if(time == 0)
+                time = 1;
 
             riverEndPoint.row(operation, type, "_custom", ElasticSearchUtil.createStatusMap("running", rows, 1000000 / time, DateUtil.formatDateISO(startTime)));
 

@@ -47,11 +47,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         closed = new AtomicBoolean(false);
 
         rc = new RiverConfiguration();
-        if (settings.settings().containsKey("jdbc"))
-            rc.getJDBCValues(settings);
-
-        if (settings.settings().containsKey("index"))
-            rc.getIndexValues(settings);
+        rc.getJDBCValues(settings);
+        rc.getIndexValues(settings);
 
         rdb = new RiverDatabase(rc.getUrl(), rc.getUser(), rc.getPassword(), 1, BigDecimal.ROUND_CEILING);
     }

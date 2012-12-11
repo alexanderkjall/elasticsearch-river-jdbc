@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -36,11 +37,14 @@ public class HashCreator implements RowListener {
 
     @Override
     public void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException {
-        calculateHash(row, digest, DIGEST_ENCODING);
-        byte[] hash = digest.digest();
         digest.reset();
+        calculateHash(row, digest, DIGEST_ENCODING);
 
-        row.put("_content_hash", hash);
+        StringBuilder hexString = new StringBuilder();
+        for (byte hashPart : digest.digest()) {
+            hexString.append(Integer.toHexString(0xFF & hashPart));
+        }
+        row.put("_content_hash", hexString.toString());
 
         next.row(operation, type, id, row);
     }
@@ -57,14 +61,11 @@ public class HashCreator implements RowListener {
      * @throws IOException
      */
     private static void calculateHash(Map<String, Object> map, MessageDigest digest, String encoding) throws IOException {
-        for (String k : map.keySet()) {
-            digest.update(k.getBytes(encoding));
-            Object o = map.get(k);
-            if (o instanceof Map) {
-                calculateHash((Map<String, Object>) o, digest, encoding);
-            }
-            else
-                digest.update(o.toString().getBytes(encoding));
+        TreeMap<String, Object> sortedMap = new TreeMap<String, Object>(map);
+
+        for (Map.Entry<String, Object> e : sortedMap.entrySet()) {
+            digest.update(e.getKey().getBytes(encoding));
+            digest.update(e.getValue().toString().getBytes(encoding));
         }
     }
 
