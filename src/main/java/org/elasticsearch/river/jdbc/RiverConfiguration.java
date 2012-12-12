@@ -60,8 +60,10 @@ public class RiverConfiguration {
     public void getJDBCValues(RiverSettings rs) {
         Map<String, Object> jdbcSettings = (Map<String, Object>) rs.settings().get("jdbc");
 
-        if(jdbcSettings == null)
+        if(jdbcSettings == null) {
+            indexName = "jdbc";
             return;
+        }
 
         poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), poll);
         url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), url);
@@ -87,14 +89,20 @@ public class RiverConfiguration {
 
         Matcher matcher = pattern.matcher(sql);
 
-        if(matcher.find())
-            return matcher.group();
+        if(matcher.matches()) {
+            return matcher.group(1);
+        }
 
         return null;
     }
 
     public void getIndexValues(RiverSettings rs) {
         Map<String, Object> indexSettings = (Map<String, Object>) rs.settings().get("index");
+
+        if(indexSettings == null) {
+            return;
+        }
+
         indexName = XContentMapValues.nodeStringValue(indexSettings.get("index"), "jdbc");
         typeName = XContentMapValues.nodeStringValue(indexSettings.get("type"), "jdbc");
         bulkSize = XContentMapValues.nodeIntegerValue(indexSettings.get("bulk_size"), 100);
@@ -177,6 +185,9 @@ public class RiverConfiguration {
     }
 
     public void loadSavedState(Client client) throws IOException {
+        if(client == null)
+            return;
+
         GetResponse get = client.prepareGet(riverIndexName, riverName.name(), "_custom").execute().actionGet();
         if (get.exists()) {
             Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
@@ -189,5 +200,13 @@ public class RiverConfiguration {
             }
         }
 
+    }
+
+    public String getIndexName() {
+        return indexName;
+    }
+
+    public void setRiverIndexName(String riverIndexName) {
+        this.riverIndexName = riverIndexName;
     }
 }

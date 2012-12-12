@@ -9,6 +9,7 @@ package org.elasticsearch.river.jdbc;
 public class VersionDigest {
     private Number version;
     private String digest;
+    private static String riverIndexName;
 
     public VersionDigest(Number version, String digest) {
         this.version = version;

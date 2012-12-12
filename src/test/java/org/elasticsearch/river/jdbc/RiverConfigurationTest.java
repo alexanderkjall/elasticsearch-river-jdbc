@@ -25,7 +25,7 @@ public class RiverConfigurationTest {
 
         instance.getJDBCValues(rs);
 
-        assertEquals("check that we have good defaults", "jdbc", instance.getRiverIndexName());
+        assertEquals("check that we have good defaults", "jdbc", instance.getIndexName());
     }
 
     @Test
@@ -43,16 +43,22 @@ public class RiverConfigurationTest {
 
         instance.getJDBCValues(rs);
 
-        assertEquals("check that we have good defaults", "orders", instance.getRiverIndexName());
+        assertEquals("check that we have good defaults", "orders", instance.getIndexName());
     }
 
     @Test
-    public void testGetIndexValues() throws Exception {
+    public void testGetIndexValuesVerifyNoNPE() throws Exception {
+        RiverConfiguration instance = new RiverConfiguration();
 
+        RiverSettings rs = mock(RiverSettings.class);
+
+        instance.getIndexValues(rs);
     }
 
     @Test
-    public void testLoadSavedState() throws Exception {
+    public void testLoadSavedStateCheckHandleNull() throws Exception {
+        RiverConfiguration instance = new RiverConfiguration();
 
+        instance.loadSavedState(null);
     }
 }

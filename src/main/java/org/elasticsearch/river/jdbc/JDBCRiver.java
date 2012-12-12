@@ -49,6 +49,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         rc = new RiverConfiguration();
         rc.getJDBCValues(settings);
         rc.getIndexValues(settings);
+        rc.setRiverIndexName(riverIndexName);
 
         rdb = new RiverDatabase(rc.getUrl(), rc.getUser(), rc.getPassword(), 1, BigDecimal.ROUND_CEILING);
     }
