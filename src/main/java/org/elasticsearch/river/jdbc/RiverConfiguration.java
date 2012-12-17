@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 public class RiverConfiguration {
     private String riverIndexName;
     private String indexName;
-    private String typeName;
     private int bulkSize;
     private TimeValue poll;
     private String url;
@@ -47,7 +46,6 @@ public class RiverConfiguration {
         rounding = BigDecimal.ROUND_UP;
         scale = 0;
         bulkSize = 0;
-        typeName = null;
         indexName = null;
         riverIndexName = null;
     }
@@ -73,7 +71,6 @@ public class RiverConfiguration {
         rounding = parseRounding(XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), Integer.toString(rounding)));
         scale = XContentMapValues.nodeIntegerValue(jdbcSettings.get("scale"), scale);
         bulkSize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("bulk_size"), bulkSize);
-        typeName = XContentMapValues.nodeStringValue(jdbcSettings.get("type_name"), typeName);
         indexName = XContentMapValues.nodeStringValue(jdbcSettings.get("index_name"), indexName);
         riverIndexName = XContentMapValues.nodeStringValue(jdbcSettings.get("river_index_name"), riverIndexName);
 
@@ -104,7 +101,6 @@ public class RiverConfiguration {
         }
 
         indexName = XContentMapValues.nodeStringValue(indexSettings.get("index"), "jdbc");
-        typeName = XContentMapValues.nodeStringValue(indexSettings.get("type"), "jdbc");
         bulkSize = XContentMapValues.nodeIntegerValue(indexSettings.get("bulk_size"), 100);
         maxBulkRequests = XContentMapValues.nodeIntegerValue(indexSettings.get("max_bulk_requests"), 30);
         if (indexSettings.containsKey("bulk_timeout")) {
@@ -162,10 +158,6 @@ public class RiverConfiguration {
 
     public String getSql() {
         return sql;
-    }
-
-    public String getTypeName() {
-        return typeName;
     }
 
     public TimeValue getPoll() {

@@ -22,7 +22,6 @@ import junit.framework.Assert;
 import org.elasticsearch.river.jdbc.IndexOperation;
 import org.elasticsearch.river.jdbc.MysqldTestHelper;
 import org.elasticsearch.river.jdbc.RowListenerCollector;
-import org.elasticsearch.river.jdbc.db.RiverDatabase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class RiverDatabaseTest {
     public void testGetTime() {
         RiverDatabase instance = new RiverDatabase(db.getUrl(), "root", "", 1, BigDecimal.ROUND_UP);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         String expResult = sdf.format(new Date());
 
         String result = instance.getTime();

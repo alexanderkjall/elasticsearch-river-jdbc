@@ -58,7 +58,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     @Override
     public void start() {
         logger.info("starting JDBC connector: URL [{}], sql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
-                rc.getUrl(), rc.getSql(), rc.getRiverName(), rc.getRiverIndexName(), rc.getTypeName(), rc.getPoll());
+                rc.getUrl(), rc.getSql(), rc.getRiverName().getName(), rc.getRiverIndexName(), rc.getIndexName(), rc.getPoll());
         try {
             client.admin().indices().prepareCreate(rc.getRiverIndexName()).execute().actionGet();
             creationDate = new Date();
