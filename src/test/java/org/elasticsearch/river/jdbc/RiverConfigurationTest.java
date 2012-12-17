@@ -1,5 +1,10 @@
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.action.ListenableActionFuture;
+import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 import org.junit.Test;
 
@@ -7,6 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,5 +68,29 @@ public class RiverConfigurationTest {
         RiverConfiguration instance = new RiverConfiguration();
 
         instance.loadSavedState(null);
+    }
+
+    @Test
+    public void testLoadSavedStateCheckHandleNull2() throws Exception {
+        RiverConfiguration instance = new RiverConfiguration();
+
+        Client client = mock(Client.class);
+
+        instance.loadSavedState(client);
+    }
+
+    @Test
+    public void testLoadSavedStateWithRiverName() throws Exception {
+        RiverConfiguration instance = new RiverConfiguration();
+
+        Client client = mock(Client.class);
+        RiverName rn = mock(RiverName.class);
+        ListenableActionFuture<GetResponse> f = mock(ListenableActionFuture.class);
+        GetRequestBuilder grb = mock(GetRequestBuilder.class);
+        when(grb.execute()).thenReturn(f);
+        when(client.prepareGet(anyString(), anyString(), anyString())).thenReturn(grb);
+
+        instance.setRiverName(rn);
+        instance.loadSavedState(client);
     }
 }

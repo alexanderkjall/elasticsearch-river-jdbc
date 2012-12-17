@@ -185,11 +185,11 @@ public class RiverConfiguration {
     }
 
     public void loadSavedState(Client client) throws IOException {
-        if(client == null)
+        if(client == null || riverName == null)
             return;
 
         GetResponse get = client.prepareGet(riverIndexName, riverName.name(), "_custom").execute().actionGet();
-        if (get.exists()) {
+        if (get != null && get.exists()) {
             Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
             if (jdbcState != null) {
                 version = (Integer) jdbcState.get("version");
@@ -208,5 +208,9 @@ public class RiverConfiguration {
 
     public void setRiverIndexName(String riverIndexName) {
         this.riverIndexName = riverIndexName;
+    }
+
+    public void setRiverName(RiverName riverName) {
+        this.riverName = riverName;
     }
 }
