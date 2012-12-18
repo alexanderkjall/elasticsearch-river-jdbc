@@ -26,7 +26,7 @@ public class StatusUpdateRowListenerTest {
         StatusUpdateRowListener instance = new StatusUpdateRowListener(prime, statuses);
 
         for(int i = 0; i < 2000; i++) {
-            instance.row(IndexOperation.INDEX, "", "", map);
+            instance.row(IndexOperation.INDEX, "", map);
         }
 
         assertEquals("check that we get a status update for every thousand rows", 2, statuses.getResults().size());

@@ -27,12 +27,11 @@ public interface RowListener {
      * Submit a row to the listener with a generic ID string.
      * 
      * @param operation the operation for the row
-     * @param type the type for the row
      * @param id the id for the row
      * @param row the keys and values of the row (column labels & content)
      * @throws IOException
      */
-    void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException;
+    void row(IndexOperation operation, String id, Map<String, Object> row) throws IOException;
 
     void flush();
 }

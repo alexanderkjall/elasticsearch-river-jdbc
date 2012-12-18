@@ -25,7 +25,7 @@ public class RowTransformerTest {
         Map<String, Object> input = new HashMap<String, Object>();
         input.put("level1.level2", "value");
 
-        instance.row(IndexOperation.INDEX, "", "", input);
+        instance.row(IndexOperation.INDEX, "", input);
 
         Map<String, Object> part = (Map<String, Object>)collector.getResults().get(0).get("level1");
         String result = (String)part.get("level2");
@@ -43,7 +43,7 @@ public class RowTransformerTest {
         input.put("level1.level2", "value");
         input.put("level1.level2-2", "value2");
 
-        instance.row(IndexOperation.INDEX, "", "", input);
+        instance.row(IndexOperation.INDEX, "", input);
 
         Map<String, Object> part = (Map<String, Object>)collector.getResults().get(0).get("level1");
         String result1 = (String)part.get("level2");

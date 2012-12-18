@@ -36,7 +36,7 @@ public class HashCreator implements RowListener {
     }
 
     @Override
-    public void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException {
+    public void row(IndexOperation operation, String id, Map<String, Object> row) throws IOException {
         digest.reset();
         calculateHash(row, digest, DIGEST_ENCODING);
 
@@ -46,7 +46,7 @@ public class HashCreator implements RowListener {
         }
         row.put("_content_hash", hexString.toString());
 
-        next.row(operation, type, id, row);
+        next.row(operation, id, row);
     }
 
     @Override

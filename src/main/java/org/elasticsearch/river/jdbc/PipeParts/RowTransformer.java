@@ -24,12 +24,12 @@ public class RowTransformer implements RowListener {
     }
 
     @Override
-    public void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException {
+    public void row(IndexOperation operation, String id, Map<String, Object> row) throws IOException {
         Map<String, Object> map = new HashMap<String, Object>();
         for(Map.Entry<String, Object> e : row.entrySet())
             merge(map, e.getKey(), e.getValue(), delimiter);
 
-        next.row(operation, type, id, map);
+        next.row(operation, id, map);
     }
 
     @Override

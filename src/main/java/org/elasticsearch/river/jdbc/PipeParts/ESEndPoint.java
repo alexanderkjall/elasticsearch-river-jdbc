@@ -27,16 +27,18 @@ public class ESEndPoint implements RowListener {
     private BulkRequestBuilder currentBulk;
     private Client client;
     private int bulkSize;
+    private String type;
 
-    public ESEndPoint(String indexTableName, Client client, int bulkSize) {
+    public ESEndPoint(String indexTableName, Client client, int bulkSize, String type) {
         this.indexTableName = indexTableName;
         this.client = client;
         this.bulkSize = bulkSize;
+        this.type = type;
         currentBulk = client.prepareBulk();
     }
 
     @Override
-    public void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException {
+    public void row(IndexOperation operation, String id, Map<String, Object> row) throws IOException {
         switch (operation) {
         case CREATE: {
             IndexRequest request = Requests.indexRequest(indexTableName).type(type).id(id).create(true).source(row);

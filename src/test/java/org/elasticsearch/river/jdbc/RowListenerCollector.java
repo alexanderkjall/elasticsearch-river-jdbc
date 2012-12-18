@@ -19,7 +19,7 @@ public class RowListenerCollector implements RowListener {
         results = new ArrayList<Map<String, Object>>();
     }
     @Override
-    public void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException {
+    public void row(IndexOperation operation, String id, Map<String, Object> row) throws IOException {
         lastOp = operation;
         results.add(row);
     }

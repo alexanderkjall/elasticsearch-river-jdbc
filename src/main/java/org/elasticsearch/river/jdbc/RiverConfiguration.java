@@ -36,6 +36,7 @@ public class RiverConfiguration {
     private char delimiter;
     private int version;
     private String versionDigest;
+    private String type;
 
     public RiverConfiguration() {
         poll = TimeValue.timeValueMinutes(60);
@@ -48,6 +49,7 @@ public class RiverConfiguration {
         bulkSize = 0;
         indexName = null;
         riverIndexName = null;
+        type = "jdbc";
     }
 
     public RiverConfiguration(RiverSettings rs) {
@@ -56,6 +58,9 @@ public class RiverConfiguration {
     }
 
     public void getJDBCValues(RiverSettings rs) {
+
+        type = XContentMapValues.nodeStringValue(rs.settings().get("type"), type);
+
         Map<String, Object> jdbcSettings = (Map<String, Object>) rs.settings().get("jdbc");
 
         if(jdbcSettings == null) {
@@ -204,5 +209,9 @@ public class RiverConfiguration {
 
     public void setRiverName(RiverName riverName) {
         this.riverName = riverName;
+    }
+
+    public String getType() {
+        return type;
     }
 }

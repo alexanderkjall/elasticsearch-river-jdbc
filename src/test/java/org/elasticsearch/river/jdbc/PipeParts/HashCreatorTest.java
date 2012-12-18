@@ -26,7 +26,7 @@ public class HashCreatorTest {
         map.put("_id", "1");
         map.put("content", "some data");
 
-        instance.row(IndexOperation.INDEX, "", "", map);
+        instance.row(IndexOperation.INDEX, "", map);
 
         assertNotNull("check that _content_hash was created", collector.getResults().get(0).get("_content_hash"));
         assertEquals("check content of hash", "e58a43818fced9da54dc7210fbd6869491878a3b56c36f41392866b25f7218", collector.getResults().get(0).get("_content_hash"));

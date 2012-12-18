@@ -62,7 +62,7 @@ public class JDBCConnector implements Runnable {
                 loadVersionAndDigest();
 
                 String startTime = rdb.getTime();
-                RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getRiverIndexName(), client, rc.getBulkSize(), rc.getDelimiter());
+                RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getRiverIndexName(), client, rc.getBulkSize(), rc.getDelimiter(), rc.getType());
 
                 int nrOfUpdates = readNewAndUpdatedRows(pipe, startTime);
                 pipe.flush();

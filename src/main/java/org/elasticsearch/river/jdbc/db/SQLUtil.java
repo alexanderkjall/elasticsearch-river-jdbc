@@ -1,6 +1,7 @@
 package org.elasticsearch.river.jdbc.db;
 
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.river.jdbc.DateUtil;
 
 import java.io.IOException;
@@ -14,8 +15,9 @@ import java.sql.*;
  * Time: 15:14
  */
 public class SQLUtil {
+    protected final static ESLogger logger = Loggers.getLogger(SQLUtil.class);
 
-    public static Object parseType(int columnType, ResultSet result, int i, ESLogger logger, int scale, int rounding) throws SQLException, IOException {
+    public static Object parseType(int columnType, ResultSet result, int i, int scale, int rounding) throws SQLException, IOException {
         switch (columnType) {
             /**
              * The JDBC types CHAR, VARCHAR, and LONGVARCHAR are closely
@@ -222,7 +224,7 @@ public class SQLUtil {
                     Timestamp t = result.getTimestamp(i);
                     return t != null ? DateUtil.formatDateISO(t.getTime()) : null;
                 } catch (SQLException e) {
-                    if(e.getMessage().equals("Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp"))
+                    if(e.getMessage().contains("0000-00-00 00:00:00"))
                         return null;
 
                     logger.warn("Exception while parsing timestamp: {}", e);

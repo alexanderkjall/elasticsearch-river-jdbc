@@ -28,7 +28,7 @@ public class StatusUpdateRowListener implements RowListener {
     }
 
     @Override
-    public void row(IndexOperation operation, String type, String id, Map<String, Object> row) throws IOException {
+    public void row(IndexOperation operation, String id, Map<String, Object> row) throws IOException {
         rows++;
         if (rows % 1000 == 0) {
             Date currentTick = new Date();
@@ -37,12 +37,12 @@ public class StatusUpdateRowListener implements RowListener {
             if(time == 0)
                 time = 1;
 
-            riverEndPoint.row(operation, type, "_custom", ElasticSearchUtil.createStatusMap("running", rows, 1000000 / time, DateUtil.formatDateISO(startTime)));
+            riverEndPoint.row(operation, "_custom", ElasticSearchUtil.createStatusMap("running", rows, 1000000 / time, DateUtil.formatDateISO(startTime)));
 
             lastTick = currentTick;
         }
 
-        next.row(operation, type, id, row);
+        next.row(operation, id, row);
     }
 
     @Override

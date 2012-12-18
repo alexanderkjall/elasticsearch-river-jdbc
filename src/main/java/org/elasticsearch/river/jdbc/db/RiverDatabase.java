@@ -78,10 +78,10 @@ public class RiverDatabase extends Database {
                 int columns = metadata.getColumnCount();
                 for (int i = 1; i <= columns; i++) {
                     String name = metadata.getColumnLabel(i);
-                    row.put(name, SQLUtil.parseType(metadata.getColumnType(i), rs, i, logger, scale, rounding));
+                    row.put(name, SQLUtil.parseType(metadata.getColumnType(i), rs, i, scale, rounding));
                 }
 
-                pipe.row(IndexOperation.INDEX, "", "", row);
+                pipe.row(IndexOperation.INDEX, "", row);
             }
         }
         catch (SQLException ex) {
@@ -117,7 +117,7 @@ public class RiverDatabase extends Database {
                 Map<String, Object> row = new HashMap<String, Object>();
                 row.put("_id", rs.getString("_id"));
 
-                pipe.row(IndexOperation.DELETE, "", "", row);
+                pipe.row(IndexOperation.DELETE, "", row);
             }
         }
         catch (SQLException ex) {
