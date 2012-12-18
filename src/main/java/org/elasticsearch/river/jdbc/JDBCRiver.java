@@ -19,6 +19,7 @@
 package org.elasticsearch.river.jdbc;
 
 import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.common.inject.Inject;
@@ -27,7 +28,6 @@ import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.river.*;
 import org.elasticsearch.river.jdbc.db.RiverDatabase;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -74,7 +74,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         logger.info("creating index: " + indexName);
 
         try {
-            client.admin().indices().prepareCreate(rc.getRiverIndexName()).execute().actionGet();
+            CreateIndexResponse cir = client.admin().indices().prepareCreate(indexName).execute().actionGet();
+            logger.info("Has the " + indexName + " index creation been acknowledged: " + cir.acknowledged());
             return new Date();
         } catch (Exception e) {
             if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
