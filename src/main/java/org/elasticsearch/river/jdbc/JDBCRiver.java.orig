@@ -19,6 +19,7 @@
 package org.elasticsearch.river.jdbc;
 
 import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.common.inject.Inject;
@@ -58,7 +59,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     @Override
     public void start() {
         logger.info("starting JDBC connector: URL [{}], sql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
-                rc.getUrl(), rc.getSql(), rc.getRiverName().getName(), rc.getRiverIndexName(), rc.getIndexName(), rc.getPoll());
+                rc.getUrl(), rc.getIndexSql(), rc.getRiverName().getName(), rc.getRiverIndexName(), rc.getIndexName(), rc.getPoll());
 
         creationDate = createIndex(rc.getRiverIndexName());
         creationDate = createIndex(rc.getIndexName());
@@ -73,7 +74,12 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         logger.info("creating index: " + indexName);
 
         try {
-            client.admin().indices().prepareCreate(rc.getRiverIndexName()).execute().actionGet();
+<<<<<<< HEAD
+            CreateIndexResponse cir = client.admin().indices().prepareCreate(indexName).execute().actionGet();
+            logger.info("Has the " + indexName + " index creation been acknowledged: " + cir.acknowledged());
+=======
+            client.admin().indices().prepareCreate(indexName).execute().actionGet();
+>>>>>>> ca4c6901c0320f60f089f5c6a8281055ae4de734
             return new Date();
         } catch (Exception e) {
             if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {

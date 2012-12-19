@@ -43,6 +43,47 @@ create table orders (
    PRIMARY KEY(_id)
 );
 
+drop table if exists orders_log;
+
+create table orders_log (
+    _id int not null,
+    op varchar(1),
+    at datetime
+);
+
+drop trigger if exists orders_delete_trigger;
+
+delimiter $$
+CREATE TRIGGER orders_delete_trigger
+AFTER delete ON orders
+FOR EACH ROW
+BEGIN
+    insert into orders_log(_id, op, at) values(old._id, 'd', now());
+END$$
+delimiter ;
+
+drop trigger if exists orders_insert_trigger;
+
+delimiter $$
+CREATE TRIGGER orders_insert_trigger
+AFTER insert ON orders
+FOR EACH ROW
+BEGIN
+    insert into orders_log(_id, op, at) values(new._id, 'i', now());
+END$$
+delimiter ;
+
+drop trigger if exists orders_update_trigger;
+
+delimiter $$
+CREATE TRIGGER orders_update_trigger
+AFTER update ON orders
+FOR EACH ROW
+BEGIN
+    insert into orders_log(_id, op, at) values(old._id, 'u', now());
+END$$
+delimiter ;
+
 insert into employees (name, department, salary) values('Smith', 'American Fruits', '10,000 $');
 insert into employees (name, department, salary) values('Jones', 'English Fruits', '6,000 £');
 insert into employees (name, department, salary) values('Müller', 'German Fruits', '8,000 €');
