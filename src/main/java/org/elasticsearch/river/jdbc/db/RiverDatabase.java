@@ -81,7 +81,11 @@ public class RiverDatabase extends Database {
                     row.put(name, SQLUtil.parseType(metadata.getColumnType(i), rs, i, scale, rounding));
                 }
 
-                pipe.row(IndexOperation.INDEX, "", row);
+                String id = null;
+                if(row.containsKey("_id"))
+                    id = row.get("_id").toString();
+
+                pipe.row(IndexOperation.INDEX, id, row);
             }
         }
         catch (SQLException ex) {

@@ -44,7 +44,7 @@ public class RiverConfigurationTest {
 
         Map<String, Object> settings = new HashMap<String, Object>();
         Map<String, Object> jdbc = new HashMap<String, Object>();
-        jdbc.put("sql", "select * from orders");
+        jdbc.put("indexSql", "select * from orders");
         settings.put("jdbc", jdbc);
 
         when(rs.settings()).thenReturn(settings);

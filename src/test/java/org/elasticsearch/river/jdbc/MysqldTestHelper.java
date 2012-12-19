@@ -32,13 +32,38 @@ public class MysqldTestHelper {
         Connection connection = DriverManager.getConnection(url, username, password);
 
         for(String statement : statements) {
-            if(!statement.trim().isEmpty()) {
-                PreparedStatement sqlStatement = connection.prepareStatement(statement);
-                sqlStatement.executeUpdate();
-                sqlStatement.close();
-            }
+            if(statement.trim().isEmpty())
+                continue;
+
+            statement = trimDelimiter(statement);
+
+            PreparedStatement sqlStatement = connection.prepareStatement(statement);
+            sqlStatement.executeUpdate();
+            sqlStatement.close();
         }
     }
+
+    protected String trimDelimiter(String input) {
+
+        if(!word(1, input).equalsIgnoreCase("delimiter"))
+            return input;
+
+        String delimiter = word(2, input);
+
+        String[] parts = input.split(delimiter);
+
+        return parts[1];
+    }
+
+    private String word(int index, String input) {
+        String[] parts = input.split("\\s");
+
+        if(index >= parts.length)
+            return "";
+
+        return parts[index];
+    }
+
 
     public void startMysql() throws IOException {
         Random random = new Random();

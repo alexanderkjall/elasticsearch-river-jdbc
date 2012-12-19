@@ -27,7 +27,8 @@ public class RiverConfiguration {
     private String url;
     private String user;
     private String password;
-    private String sql;
+    private String indexSql;
+    private String deleteSql;
     private int scale;
     private int rounding;
     private int maxBulkRequests;
@@ -43,7 +44,8 @@ public class RiverConfiguration {
         url = null;
         user = null;
         password = null;
-        sql = null;
+        indexSql = null;
+        deleteSql = null;
         rounding = BigDecimal.ROUND_UP;
         scale = 0;
         bulkSize = 0;
@@ -72,7 +74,8 @@ public class RiverConfiguration {
         url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), url);
         user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), user);
         password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), password);
-        sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), sql);
+        indexSql = XContentMapValues.nodeStringValue(jdbcSettings.get("indexSql"), indexSql);
+        deleteSql = XContentMapValues.nodeStringValue(jdbcSettings.get("deleteSql"), deleteSql);
         rounding = parseRounding(XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), Integer.toString(rounding)));
         scale = XContentMapValues.nodeIntegerValue(jdbcSettings.get("scale"), scale);
         bulkSize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("bulk_size"), bulkSize);
@@ -80,7 +83,7 @@ public class RiverConfiguration {
         riverIndexName = XContentMapValues.nodeStringValue(jdbcSettings.get("river_index_name"), riverIndexName);
 
         if(indexName == null)
-            indexName = guessIndexNameFromSql(sql);
+            indexName = guessIndexNameFromSql(indexSql);
         if(indexName == null)
             indexName = "jdbc";
     }
@@ -161,8 +164,8 @@ public class RiverConfiguration {
         return riverIndexName;
     }
 
-    public String getSql() {
-        return sql;
+    public String getIndexSql() {
+        return indexSql;
     }
 
     public TimeValue getPoll() {
@@ -213,5 +216,9 @@ public class RiverConfiguration {
 
     public String getType() {
         return type;
+    }
+
+    public String getDeleteSql() {
+        return deleteSql;
     }
 }

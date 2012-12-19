@@ -27,7 +27,6 @@ import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.river.*;
 import org.elasticsearch.river.jdbc.db.RiverDatabase;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,7 +58,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     @Override
     public void start() {
         logger.info("starting JDBC connector: URL [{}], sql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
-                rc.getUrl(), rc.getSql(), rc.getRiverName().getName(), rc.getRiverIndexName(), rc.getIndexName(), rc.getPoll());
+                rc.getUrl(), rc.getIndexSql(), rc.getRiverName().getName(), rc.getRiverIndexName(), rc.getIndexName(), rc.getPoll());
 
         creationDate = createIndex(rc.getRiverIndexName());
         creationDate = createIndex(rc.getIndexName());
@@ -74,7 +73,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         logger.info("creating index: " + indexName);
 
         try {
-            client.admin().indices().prepareCreate(rc.getRiverIndexName()).execute().actionGet();
+            client.admin().indices().prepareCreate(indexName).execute().actionGet();
             return new Date();
         } catch (Exception e) {
             if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
