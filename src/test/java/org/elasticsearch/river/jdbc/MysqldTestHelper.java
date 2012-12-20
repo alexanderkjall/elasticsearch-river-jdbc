@@ -1,13 +1,12 @@
 package org.elasticsearch.river.jdbc;
 
 import com.mysql.management.MysqldResource;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,22 +24,11 @@ public class MysqldTestHelper {
     private int mysqlPort;
 
     public void loadTables(String file, String url, String username, String password) throws IOException, SQLException {
-        String content = FileUtils.readFileToString(new File(file));
-
-        String[] statements = content.split(";");
-
         Connection connection = DriverManager.getConnection(url, username, password);
 
-        for(String statement : statements) {
-            if(statement.trim().isEmpty())
-                continue;
+        ScriptRunner sr = new ScriptRunner(connection, true, true);
 
-            statement = trimDelimiter(statement);
-
-            PreparedStatement sqlStatement = connection.prepareStatement(statement);
-            sqlStatement.executeUpdate();
-            sqlStatement.close();
-        }
+        sr.runScript(new FileReader(file));
     }
 
     protected String trimDelimiter(String input) {
