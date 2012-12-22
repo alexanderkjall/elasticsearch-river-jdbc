@@ -121,16 +121,16 @@ public class SQLUtil {
              */
             case Types.BLOB:
                 Blob blob = result.getBlob(i);
-                if (blob != null) {
-                    long n = blob.length();
-                    if (n > Integer.MAX_VALUE) {
-                        throw new IOException("can't process blob larger than Integer.MAX_VALUE");
-                    }
-                    byte[] b = blob.getBytes(1, (int) n);
-                    blob.free();
-                    return b;
+                if (blob == null)
+                    return null;
+
+                long n = blob.length();
+                if (n > Integer.MAX_VALUE) {
+                    throw new IOException("can't process blob larger than Integer.MAX_VALUE");
                 }
-                return null;
+                byte[] b = blob.getBytes(1, (int) n);
+                blob.free();
+                return b;
 
             /**
              * The JDBC type CLOB represents the SQL3 type CLOB (Character
@@ -146,29 +146,29 @@ public class SQLUtil {
              */
             case Types.CLOB:
                 Clob clob = result.getClob(i);
-                if (clob != null) {
-                    long n = clob.length();
-                    if (n > Integer.MAX_VALUE) {
-                        throw new IOException("can't process clob larger than Integer.MAX_VALUE");
-                    }
-                    String s = clob.getSubString(1, (int) n);
-                    clob.free();
-                    return s;
+                if (clob == null)
+                    return null;
+
+                n = clob.length();
+                if (n > Integer.MAX_VALUE) {
+                    throw new IOException("can't process clob larger than Integer.MAX_VALUE");
                 }
-                return null;
+                String s = clob.getSubString(1, (int) n);
+                clob.free();
+                return s;
 
             case Types.NCLOB:
                 NClob nclob = result.getNClob(i);
-                if (nclob != null) {
-                    long n = nclob.length();
-                    if (n > Integer.MAX_VALUE) {
-                        throw new IOException("can't process nclob larger than Integer.MAX_VALUE");
-                    }
-                    String s = nclob.getSubString(1, (int) n);
-                    nclob.free();
-                    return s;
+                if (nclob == null)
+                    return null;
+
+                n = nclob.length();
+                if (n > Integer.MAX_VALUE) {
+                    throw new IOException("can't process nclob larger than Integer.MAX_VALUE");
                 }
-                return null;
+                s = nclob.getSubString(1, (int) n);
+                nclob.free();
+                return s;
 
             /**
              * The JDBC type DATALINK, new in the JDBC 3.0 API, is a column

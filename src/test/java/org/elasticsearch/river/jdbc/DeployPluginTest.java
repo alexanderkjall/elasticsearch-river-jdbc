@@ -47,7 +47,8 @@ public class DeployPluginTest {
                 "        \"url\" : \"jdbc:mysql://localhost:3306/test\",\n" +
                 "        \"user\" : \"\",\n" +
                 "        \"password\" : \"\",\n" +
-                "        \"sql\" : \"select * from orders\"\n" +
+                "        \"indexSql\" : \"select o.* from orders o, orders_log l where o._id=l._id and (l.op='i' or l.op='u')\",\n" +
+                "        \"deleteSql\" : \"select _id from orders_log where op='d'\"\n" +
                 "    }\n" +
                 "}");
         input.setContentType("application/json");

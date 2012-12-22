@@ -27,15 +27,13 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
+
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.io.PrintWriter;
 import java.io.Reader;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,14 +42,14 @@ import java.util.regex.Pattern;
  */
 public class ScriptRunner {
 
+    protected final ESLogger logger = Loggers.getLogger(getClass());
+
     private static final String DEFAULT_DELIMITER = ";";
     private Connection connection;
     private boolean stopOnError;
     private boolean autoCommit;
-    private PrintWriter logWriter = new PrintWriter(System.out);
-    private PrintWriter errorLogWriter = new PrintWriter(System.err);
     private String delimiter = DEFAULT_DELIMITER;
-    private boolean fullLineDelimiter = false;
+    private boolean fullLineDelimiter;
     private static final String DELIMITER_LINE_REGEX = "(?i)DELIMITER.+";
     private static final String DELIMITER_LINE_SPLIT_REGEX = "(?i)DELIMITER";
 
@@ -68,26 +66,6 @@ public class ScriptRunner {
     public void setDelimiter(String delimiter, boolean fullLineDelimiter) {
         this.delimiter = delimiter;
         this.fullLineDelimiter = fullLineDelimiter;
-    }
-
-    /**
-     * Setter for logWriter property
-     *
-     * @param logWriter
-     *            - the new value of the logWriter property
-     */
-    public void setLogWriter(PrintWriter logWriter) {
-        this.logWriter = logWriter;
-    }
-
-    /**
-     * Setter for errorLogWriter property
-     *
-     * @param errorLogWriter
-     *            - the new value of the errorLogWriter property
-     */
-    public void setErrorLogWriter(PrintWriter errorLogWriter) {
-        this.errorLogWriter = errorLogWriter;
     }
 
     /**
@@ -157,7 +135,7 @@ public class ScriptRunner {
                         if (line == null) {
                             break;
                         }
-                        trimmedLine = line.trim();
+                        line.trim();
                     }
 
                     command.append(line.substring(0, line.lastIndexOf(delimiter)));
@@ -206,14 +184,13 @@ public class ScriptRunner {
                         if(rs != null)
                             rs.close();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("Exception caught: ", e);
                     }
                     try {
                         if(statement != null)
                             statement.close();
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        // Ignore to workaround a bug in Jakarta DBCP
+                        logger.error("Exception caught: ", e);
                     }
                     Thread.yield();
                 } else {
@@ -225,7 +202,7 @@ public class ScriptRunner {
                         if (line == null) {
                             break;
                         }
-                        trimmedLine = line.trim();
+                        line.trim();
                     }
                     command.append(line);
                     command.append(" ");
@@ -244,41 +221,19 @@ public class ScriptRunner {
             printlnError("Error executing: " + command);
             printlnError(e);
             throw e;
-        } finally {
-            //conn.rollback();
-            flush();
         }
-    }
-
-    private String getDelimiter() {
-        return delimiter;
     }
 
     private void print(Object o) {
-        if (logWriter != null) {
-            System.out.print(o);
-        }
+        logger.info("{}", o);
     }
 
     private void println(Object o) {
-        if (logWriter != null) {
-            logWriter.println(o);
-        }
+        logger.info("{}", o);
     }
 
     private void printlnError(Object o) {
-        if (errorLogWriter != null) {
-            errorLogWriter.println(o);
-        }
-    }
-
-    private void flush() {
-        if (logWriter != null) {
-            logWriter.flush();
-        }
-        if (errorLogWriter != null) {
-            errorLogWriter.flush();
-        }
+        logger.error("{}", o);
     }
 }
 

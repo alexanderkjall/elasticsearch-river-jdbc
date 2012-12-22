@@ -1,0 +1,11 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "driver" : "com.mysql.jdbc.Driver",
+        "url" : "jdbc:mysql://localhost:3306/test",
+        "user" : "",
+        "password" : "",
+        "indexSql" : "select o.* from orders o, orders_log l where o._id=l._id and (l.op='i' or l.op='u')",
+        "deleteSql" : "select _id from orders_log where op='d'"
+    }
+}
