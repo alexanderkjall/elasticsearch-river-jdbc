@@ -2,7 +2,7 @@ package org.elasticsearch.river.jdbc.db;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
-import org.elasticsearch.river.jdbc.DateUtil;
+import org.elasticsearch.river.jdbc.util.DateUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;

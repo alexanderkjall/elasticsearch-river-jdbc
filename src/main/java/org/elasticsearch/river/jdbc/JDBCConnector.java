@@ -22,14 +22,12 @@ public class JDBCConnector implements Runnable {
     private RiverConfiguration rc;
     private AtomicBoolean closed;
     private Client client;
-    private Date creationDate;
 
     public JDBCConnector(RiverDatabase rdb, RiverConfiguration rc, AtomicBoolean closed, Client client, Date creationDate) {
         this.rdb = rdb;
         this.rc = rc;
         this.closed = closed;
         this.client = client;
-        this.creationDate = creationDate;
     }
 
     private void loadVersionAndDigest() throws IOException {
@@ -65,9 +63,9 @@ public class JDBCConnector implements Runnable {
                 RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getIndexName(), client, rc.getBulkSize(), rc.getDelimiter(), rc.getType());
 
                 int nrOfUpdates = readNewAndUpdatedRows(pipe, startTime);
-                pipe.flush();
+                pipe.refresh();
                 int nrOfDeletes = readDeletes(pipe, startTime);
-                pipe.flush();
+                pipe.refresh();
 
                 delay("next run");
 

@@ -11,6 +11,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.anyInt;
@@ -119,5 +120,38 @@ public class SQLUtilTest {
             else
                 assertTrue("check that its correct type, wanted " + entry.getValue() + " but got " + result, entry.getValue().isInstance(result));
         }
+    }
+
+    @Test
+    public void testDate() throws SQLException, IOException {
+        ResultSet rs = mock(ResultSet.class);
+
+        when(rs.getDate(anyInt())).thenReturn(new Date(1000000000L));
+
+        String result = (String)SQLUtil.parseType(Types.DATE, rs, 1, 1, 1);
+
+        assertEquals("check that we get a datestring", "1970-01-12T14:46:40Z", result);
+    }
+
+    @Test
+    public void testTime() throws SQLException, IOException {
+        ResultSet rs = mock(ResultSet.class);
+
+        when(rs.getTime(anyInt())).thenReturn(new Time(1000000000L));
+
+        String result = (String)SQLUtil.parseType(Types.TIME, rs, 1, 1, 1);
+
+        assertEquals("check that we get a datestring", "1970-01-12T14:46:40Z", result);
+    }
+
+    @Test
+    public void testTimestamp() throws SQLException, IOException {
+        ResultSet rs = mock(ResultSet.class);
+
+        when(rs.getTimestamp(anyInt())).thenReturn(new Timestamp(1000000000L));
+
+        String result = (String)SQLUtil.parseType(Types.TIMESTAMP, rs, 1, 1, 1);
+
+        assertEquals("check that we get a datestring", "1970-01-12T14:46:40Z", result);
     }
 }

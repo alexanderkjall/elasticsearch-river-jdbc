@@ -31,12 +31,9 @@ public class RiverConfiguration {
     private String deleteSql;
     private int scale;
     private int rounding;
-    private int maxBulkRequests;
-    private TimeValue bulkTimeout;
     private RiverName riverName;
     private char delimiter;
     private int version;
-    private String versionDigest;
     private String type;
 
     public RiverConfiguration() {
@@ -52,6 +49,7 @@ public class RiverConfiguration {
         indexName = null;
         riverIndexName = null;
         type = "jdbc";
+        delimiter = '.';
     }
 
     public RiverConfiguration(RiverSettings rs) {
@@ -88,7 +86,7 @@ public class RiverConfiguration {
             indexName = "jdbc";
     }
 
-    private String guessIndexNameFromSql(String sql) {
+    private static String guessIndexNameFromSql(String sql) {
 
         Pattern pattern = Pattern.compile(".*from\\s+(\\w*).*");
 
@@ -110,12 +108,6 @@ public class RiverConfiguration {
 
         indexName = XContentMapValues.nodeStringValue(indexSettings.get("index"), "jdbc");
         bulkSize = XContentMapValues.nodeIntegerValue(indexSettings.get("bulk_size"), 100);
-        maxBulkRequests = XContentMapValues.nodeIntegerValue(indexSettings.get("max_bulk_requests"), 30);
-        if (indexSettings.containsKey("bulk_timeout")) {
-            bulkTimeout = TimeValue.parseTimeValue(XContentMapValues.nodeStringValue(indexSettings.get("bulk_timeout"), "60s"), TimeValue.timeValueMillis(60000));
-        } else {
-            bulkTimeout = TimeValue.timeValueMillis(60000);
-        }
 
         /** defaults
          indexName = "jdbc";
@@ -127,22 +119,22 @@ public class RiverConfiguration {
          */
     }
 
-    protected int parseRounding(String inputRounding) {
+    protected static int parseRounding(String inputRounding) {
         if ("ceiling".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_CEILING;
-        else if ("down".equalsIgnoreCase(inputRounding))
+        if ("down".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_DOWN;
-        else if ("floor".equalsIgnoreCase(inputRounding))
+        if ("floor".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_FLOOR;
-        else if ("halfdown".equalsIgnoreCase(inputRounding))
+        if ("halfdown".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_HALF_DOWN;
-        else if ("halfeven".equalsIgnoreCase(inputRounding))
+        if ("halfeven".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_HALF_EVEN;
-        else if ("halfup".equalsIgnoreCase(inputRounding))
+        if ("halfup".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_HALF_UP;
-        else if ("unnecessary".equalsIgnoreCase(inputRounding))
+        if ("unnecessary".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_UNNECESSARY;
-        else if ("up".equalsIgnoreCase(inputRounding))
+        if ("up".equalsIgnoreCase(inputRounding))
             return BigDecimal.ROUND_UP;
 
         return BigDecimal.ROUND_CEILING;
@@ -193,10 +185,9 @@ public class RiverConfiguration {
             Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
             if (jdbcState != null) {
                 version = (Integer) jdbcState.get("version");
-                version = version + 1; // increase to next version
-                versionDigest = (String) jdbcState.get("digest");
+                version++; // increase to next version
             } else {
-                throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName.name());
+                throw new IOException("can't retrieve previously persisted state from " + riverIndexName + '/' + riverName.name());
             }
         }
 

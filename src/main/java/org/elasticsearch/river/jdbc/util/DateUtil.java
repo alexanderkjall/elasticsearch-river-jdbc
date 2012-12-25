@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.elasticsearch.river.jdbc;
+package org.elasticsearch.river.jdbc.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

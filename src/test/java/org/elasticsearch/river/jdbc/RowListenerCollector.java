@@ -25,7 +25,7 @@ public class RowListenerCollector implements RowListener {
     }
 
     @Override
-    public void flush() {
+    public void refresh() {
     }
 
     public List<Map<String, Object>> getResults() {

@@ -85,9 +85,7 @@ public class ScriptRunner {
             } finally {
                 connection.setAutoCommit(originalAutoCommit);
             }
-        } catch (IOException e) {
-            throw e;
-        } catch (SQLException e) {
+        } catch (IOException | SQLException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error running script.  Cause: " + e, e);
@@ -119,9 +117,7 @@ public class ScriptRunner {
                 String trimmedLine = line.trim();
                 if (trimmedLine.startsWith("--")) {
                     println(trimmedLine);
-                } else if (trimmedLine.length() < 1 || trimmedLine.startsWith("//")) {
-                    // Do nothing
-                } else if (trimmedLine.length() < 1 || trimmedLine.startsWith("--")) {
+                } else if (trimmedLine.length() < 1 || trimmedLine.startsWith("//") || trimmedLine.length() < 1 || trimmedLine.startsWith("--")) {
                     // Do nothing
                 } else if (!fullLineDelimiter && trimmedLine.endsWith(delimiter)
                         || fullLineDelimiter && trimmedLine.equals(delimiter)) {
@@ -139,7 +135,7 @@ public class ScriptRunner {
                     }
 
                     command.append(line.substring(0, line.lastIndexOf(delimiter)));
-                    command.append(" ");
+                    command.append(' ');
                     Statement statement = conn.createStatement();
 
                     println(command);
@@ -167,13 +163,13 @@ public class ScriptRunner {
                         int cols = md.getColumnCount();
                         for (int i = 0; i < cols; i++) {
                             String name = md.getColumnLabel(i);
-                            print(name + "\t");
+                            print(name + '\t');
                         }
                         println("");
                         while (rs.next()) {
                             for (int i = 1; i <= cols; i++) {
                                 String value = rs.getString(i);
-                                print(value + "\t");
+                                print(value + '\t');
                             }
                             println("");
                         }
@@ -205,18 +201,13 @@ public class ScriptRunner {
                         line.trim();
                     }
                     command.append(line);
-                    command.append(" ");
+                    command.append(' ');
                 }
             }
             if (!autoCommit) {
                 conn.commit();
             }
-        } catch (SQLException e) {
-            e.fillInStackTrace();
-            printlnError("Error executing: " + command);
-            printlnError(e);
-            throw e;
-        } catch (IOException e) {
+        } catch (SQLException | IOException e) {
             e.fillInStackTrace();
             printlnError("Error executing: " + command);
             printlnError(e);

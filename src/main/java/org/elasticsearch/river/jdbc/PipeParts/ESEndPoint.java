@@ -9,6 +9,7 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.river.jdbc.BulkActionListener;
 import org.elasticsearch.river.jdbc.IndexOperation;
+import org.elasticsearch.river.jdbc.RefreshActionListener;
 import org.elasticsearch.river.jdbc.RowListener;
 
 import java.io.IOException;
@@ -63,7 +64,10 @@ public class ESEndPoint implements RowListener {
     }
 
     @Override
-    public void flush() {
+    public void refresh() {
+        processBulk();
+
+        client.admin().indices().prepareRefresh(indexTableName).execute(new RefreshActionListener());
     }
 
     private void processBulk() {

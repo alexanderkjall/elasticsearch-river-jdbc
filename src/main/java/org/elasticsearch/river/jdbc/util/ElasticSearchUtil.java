@@ -1,16 +1,8 @@
-package org.elasticsearch.river.jdbc;
+package org.elasticsearch.river.jdbc.util;
 
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.river.RiverName;
-
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.elasticsearch.client.Requests.indexRequest;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
  * Created with IntelliJ IDEA.

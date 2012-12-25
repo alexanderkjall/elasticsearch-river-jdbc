@@ -1,5 +1,6 @@
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.river.jdbc.util.DateUtil;
 import org.junit.Test;
 
 import java.util.Date;

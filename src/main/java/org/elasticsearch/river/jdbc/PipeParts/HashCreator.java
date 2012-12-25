@@ -50,8 +50,8 @@ public class HashCreator implements RowListener {
     }
 
     @Override
-    public void flush() {
-        next.flush();
+    public void refresh() {
+        next.refresh();
     }
 
     /**

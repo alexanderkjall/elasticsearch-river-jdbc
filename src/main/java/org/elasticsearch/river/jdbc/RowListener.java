@@ -33,5 +33,5 @@ public interface RowListener {
      */
     void row(IndexOperation operation, String id, Map<String, Object> row) throws IOException;
 
-    void flush();
+    void refresh();
 }

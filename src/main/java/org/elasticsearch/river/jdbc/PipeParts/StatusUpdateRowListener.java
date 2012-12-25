@@ -1,6 +1,8 @@
 package org.elasticsearch.river.jdbc.PipeParts;
 
 import org.elasticsearch.river.jdbc.*;
+import org.elasticsearch.river.jdbc.util.DateUtil;
+import org.elasticsearch.river.jdbc.util.ElasticSearchUtil;
 
 import java.io.IOException;
 import java.util.Date;
@@ -46,9 +48,9 @@ public class StatusUpdateRowListener implements RowListener {
     }
 
     @Override
-    public void flush() {
+    public void refresh() {
         rows = 0;
         startTime = new Date();
-        next.flush();
+        next.refresh();
     }
 }
