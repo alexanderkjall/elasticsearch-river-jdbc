@@ -22,7 +22,7 @@ public class HashCreatorTest {
         RowListenerCollector collector = new RowListenerCollector();
         HashCreator instance = new HashCreator(collector);
 
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("_id", "1");
         map.put("content", "some data");
 

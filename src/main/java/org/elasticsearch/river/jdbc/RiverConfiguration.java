@@ -35,19 +35,13 @@ public class RiverConfiguration {
     private char delimiter;
     private int version;
     private String type;
+    private String fullIndexSql;
 
     public RiverConfiguration() {
         poll = TimeValue.timeValueMinutes(60);
-        url = null;
-        user = null;
-        password = null;
-        indexSql = null;
-        deleteSql = null;
         rounding = BigDecimal.ROUND_UP;
         scale = 0;
         bulkSize = 0;
-        indexName = null;
-        riverIndexName = null;
         type = "jdbc";
         delimiter = '.';
     }
@@ -61,7 +55,7 @@ public class RiverConfiguration {
 
         type = XContentMapValues.nodeStringValue(rs.settings().get("type"), type);
 
-        Map<String, Object> jdbcSettings = (Map<String, Object>) rs.settings().get("jdbc");
+        Map<String, Object> jdbcSettings = asMap(rs.settings(), "jdbc");
 
         if(jdbcSettings == null) {
             indexName = "jdbc";
@@ -72,6 +66,7 @@ public class RiverConfiguration {
         url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), url);
         user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), user);
         password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), password);
+        fullIndexSql = XContentMapValues.nodeStringValue(jdbcSettings.get("fullIndexSql"), fullIndexSql);
         indexSql = XContentMapValues.nodeStringValue(jdbcSettings.get("indexSql"), indexSql);
         deleteSql = XContentMapValues.nodeStringValue(jdbcSettings.get("deleteSql"), deleteSql);
         rounding = parseRounding(XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), Integer.toString(rounding)));
@@ -86,7 +81,7 @@ public class RiverConfiguration {
             indexName = "jdbc";
     }
 
-    private static String guessIndexNameFromSql(String sql) {
+    private static String guessIndexNameFromSql(CharSequence sql) {
 
         Pattern pattern = Pattern.compile(".*from\\s+(\\w*).*");
 
@@ -100,7 +95,7 @@ public class RiverConfiguration {
     }
 
     public void getIndexValues(RiverSettings rs) {
-        Map<String, Object> indexSettings = (Map<String, Object>) rs.settings().get("index");
+        Map<String, Object> indexSettings = asMap(rs.settings(), "index");
 
         if(indexSettings == null) {
             return;
@@ -182,7 +177,7 @@ public class RiverConfiguration {
 
         GetResponse get = client.prepareGet(riverIndexName, riverName.name(), "_custom").execute().actionGet();
         if (get != null && get.exists()) {
-            Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
+            Map<String, Object> jdbcState = asMap(get.sourceAsMap(), "jdbc");
             if (jdbcState != null) {
                 version = (Integer) jdbcState.get("version");
                 version++; // increase to next version
@@ -211,5 +206,13 @@ public class RiverConfiguration {
 
     public String getDeleteSql() {
         return deleteSql;
+    }
+
+    public String getFullIndexSql() {
+        return fullIndexSql;
+    }
+
+    private static Map<String, Object> asMap(Map<String, Object> instance, String key) {
+        return (Map<String, Object>) instance.get(key);
     }
 }

@@ -22,12 +22,14 @@ public class JDBCConnector implements Runnable {
     private RiverConfiguration rc;
     private AtomicBoolean closed;
     private Client client;
+    private JDBCRiver.IndexState initialState;
 
-    public JDBCConnector(RiverDatabase rdb, RiverConfiguration rc, AtomicBoolean closed, Client client, Date creationDate) {
+    public JDBCConnector(RiverDatabase rdb, RiverConfiguration rc, AtomicBoolean closed, Client client, JDBCRiver.IndexState initialState) {
         this.rdb = rdb;
         this.rc = rc;
         this.closed = closed;
         this.client = client;
+        this.initialState = initialState;
     }
 
     private void loadVersionAndDigest() throws IOException {
@@ -36,35 +38,42 @@ public class JDBCConnector implements Runnable {
         rc.loadSavedState(client);
     }
 
-    private int readNewAndUpdatedRows(RowListener pipe, String startTime) throws IOException {
+    private void readAllRows(RowListener pipe) {
+        int rows = rdb.pushRowsToListener(rc.getFullIndexSql(), pipe);
+
+        logger.info("got " + rows + " rows for full update at " + new Date());
+    }
+
+    private void readNewAndUpdatedRows(RowListener pipe, String startTime) throws IOException {
         int rows = rdb.pushRowsToListener(rc.getIndexSql(), pipe);
 
         logger.info("got " + rows + " rows for update at " + startTime);
-
-        return rows;
     }
 
-    private int readDeletes(RowListener pipe, String startTime) throws IOException {
+    private void readDeletes(RowListener pipe, String startTime) throws IOException {
         int rows = rdb.pushDeletesToListener(rc.getDeleteSql(), pipe);
 
         logger.info("got " + rows + " for deletion at " + startTime);
-
-        return rows;
     }
 
     @Override
     public void run() {
+        RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getIndexName(), client, rc.getBulkSize(), rc.getDelimiter(), rc.getType());
+
+        if(initialState == JDBCRiver.IndexState.NEW) {
+            readAllRows(pipe);
+            pipe.refresh();
+        }
 
         while (true) {
             try {
                 loadVersionAndDigest();
 
                 String startTime = rdb.getTime();
-                RowListener pipe = PipelineFactory.createIncrementalPipe(rc.getRiverName().toString(), rc.getIndexName(), client, rc.getBulkSize(), rc.getDelimiter(), rc.getType());
 
-                int nrOfUpdates = readNewAndUpdatedRows(pipe, startTime);
+                readNewAndUpdatedRows(pipe, startTime);
                 pipe.refresh();
-                int nrOfDeletes = readDeletes(pipe, startTime);
+                readDeletes(pipe, startTime);
                 pipe.refresh();
 
                 delay("next run");
@@ -81,8 +90,7 @@ public class JDBCConnector implements Runnable {
 
     private void delay(String reason) {
         if (rc.getPoll().millis() > 0L) {
-            logger.info("{}, waiting {}, sql [{}] river table [{}]",
-                    reason, rc.getPoll(), rc.getIndexSql(), false);
+            logger.info("{}, waiting {}, sql [{}] river table [{}]", reason, rc.getPoll(), rc.getIndexSql(), false);
             try {
                 Thread.sleep(rc.getPoll().millis());
             } catch (InterruptedException ignored) {

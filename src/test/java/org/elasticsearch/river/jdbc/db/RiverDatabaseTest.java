@@ -18,7 +18,6 @@
  */
 package org.elasticsearch.river.jdbc.db;
 
-import junit.framework.Assert;
 import org.elasticsearch.river.jdbc.IndexOperation;
 import org.elasticsearch.river.jdbc.MysqldTestHelper;
 import org.elasticsearch.river.jdbc.RowListenerCollector;
@@ -75,7 +74,7 @@ public class RiverDatabaseTest {
         int expResult = 5;
 
         assertEquals("check number of updates", expResult, collector.getResults().size());
-        Assert.assertEquals("check that we send INDEX operations", IndexOperation.INDEX, collector.getLastOp());
+        assertEquals("check that we send INDEX operations", IndexOperation.INDEX, collector.getLastOp());
     }
 
     @Test

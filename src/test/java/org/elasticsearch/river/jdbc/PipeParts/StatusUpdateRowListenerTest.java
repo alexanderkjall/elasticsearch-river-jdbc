@@ -21,7 +21,7 @@ public class StatusUpdateRowListenerTest {
         RowListenerCollector prime = new RowListenerCollector();
         RowListenerCollector statuses = new RowListenerCollector();
 
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
 
         StatusUpdateRowListener instance = new StatusUpdateRowListener(prime, statuses);
 

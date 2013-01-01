@@ -40,6 +40,11 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private RiverDatabase rdb;
     private RiverConfiguration rc;
 
+    public enum IndexState {
+        NEW,
+        OLD
+    }
+
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings, @RiverIndexName String riverIndexName, Client client) {
         super(riverName, settings);
@@ -60,32 +65,33 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         logger.info("starting JDBC connector: URL [{}], indexSql [{}], deleteSql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
                 rc.getUrl(), rc.getIndexSql(), rc.getDeleteSql(), rc.getRiverName().getName(), rc.getRiverIndexName(), rc.getIndexName(), rc.getPoll());
 
-        creationDate = createIndex(rc.getRiverIndexName());
-        creationDate = createIndex(rc.getIndexName());
+        createIndex(rc.getRiverIndexName());
+        IndexState state = createIndex(rc.getIndexName());
 
-        Runnable toRun = new JDBCConnector(rdb, rc, closed, client, creationDate);
+        Runnable toRun = new JDBCConnector(rdb, rc, closed, client, state);
 
         thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(toRun);
         thread.start();
     }
 
-    protected Date createIndex(String indexName) {
+    protected IndexState createIndex(String indexName) {
         logger.info("creating index: " + indexName);
 
         try {
-            client.admin().indices().prepareCreate(rc.getRiverIndexName()).execute().actionGet();
-            return new Date();
+            client.admin().indices().prepareCreate(indexName).execute().actionGet();
+            //schedule full refresh
+            return IndexState.NEW;
         } catch (Exception e) {
-            if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
-                // that's fine
-            } else if (ExceptionsHelper.unwrapCause(e) instanceof ClusterBlockException) {
-                // ok, not recovered yet..., lets start indexing and hope we recover by the first bulk
-            } else {
+            Throwable t = ExceptionsHelper.unwrapCause(e);
+            if (t instanceof IndexAlreadyExistsException || t instanceof ClusterBlockException) {
+                return IndexState.OLD;
+            }
+            else {
                 logger.error("failed to create index [{}], disabling river...", e, rc.getRiverIndexName());
                 throw new RuntimeException("failed to create index [" + indexName + "], disabling river...", e);
             }
+            
         }
-        return null;
     }
 
     @Override

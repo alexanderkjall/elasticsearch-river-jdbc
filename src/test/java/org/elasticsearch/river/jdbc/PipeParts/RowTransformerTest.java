@@ -22,7 +22,7 @@ public class RowTransformerTest {
 
         RowTransformer instance = new RowTransformer(collector, '.');
 
-        Map<String, Object> input = new HashMap<String, Object>();
+        Map<String, Object> input = new HashMap<>();
         input.put("level1.level2", "value");
 
         instance.row(IndexOperation.INDEX, "", input);
@@ -39,7 +39,7 @@ public class RowTransformerTest {
 
         RowTransformer instance = new RowTransformer(collector, '.');
 
-        Map<String, Object> input = new HashMap<String, Object>();
+        Map<String, Object> input = new HashMap<>();
         input.put("level1.level2", "value");
         input.put("level1.level2-2", "value2");
 
